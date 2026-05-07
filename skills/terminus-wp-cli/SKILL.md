@@ -2,6 +2,10 @@
 name: terminus-wp-cli
 description: "Run WP-CLI commands on Pantheon environments via Terminus. Use when SSH WP-CLI is unavailable and you need to manage WordPress on dev/test/live/multidev."
 compatibility: "Pantheon-hosted WordPress sites. Requires Terminus ≥3, PHP 8.2+, OpenSSH 7.8+."
+license: MIT
+metadata:
+  author: georgestephanis
+  version: "1.0"
 ---
 
 # Terminus WP-CLI

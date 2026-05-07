@@ -2,6 +2,10 @@
 name: github-cli
 description: "Use the gh CLI to manage GitHub pull requests, issues, releases, and workflows from the terminal. Use when interacting with GitHub without leaving the shell."
 compatibility: "Any platform with gh installed. Supports GitHub.com and GitHub Enterprise Server."
+license: MIT
+metadata:
+  author: georgestephanis
+  version: "1.0"
 ---
 
 # GitHub CLI (`gh`)
