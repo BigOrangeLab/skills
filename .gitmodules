@@ -1,0 +1,4 @@
+[submodule "vendor/wordpress"]
+	path = vendor/wordpress
+	url = https://github.com/WordPress/agent-skills.git
+	branch = trunk
