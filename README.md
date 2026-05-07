@@ -33,6 +33,21 @@ Followed by these sections (in order):
 
 Optionally include a `references/` subdirectory for deeper documentation and a `scripts/` subdirectory for deterministic helper scripts.
 
+## Skills
+
+### Custom skills (`skills/`)
+
+| Skill | Description |
+|---|---|
+| [github-cli](skills/github-cli/) | Use the `gh` CLI to manage GitHub PRs, issues, repos, releases, and Actions from the terminal. Includes JSON/jq scripting patterns and `gh api` usage. |
+| [terminus-wp-cli](skills/terminus-wp-cli/) | Run WP-CLI commands on Pantheon environments via Terminus. Covers installation, authentication, environment targeting, common commands, and Pantheon-specific cache/session commands. |
+
+### WordPress skills (`vendor/wordpress/`)
+
+Upstream skills from [WordPress/agent-skills](https://github.com/WordPress/agent-skills). See that repo's README for the full list.
+
+---
+
 ## Installing Skills
 
 Use the WordPress agent-skills build tooling to install skills into a project:
