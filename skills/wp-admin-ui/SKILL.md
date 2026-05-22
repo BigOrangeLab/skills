@@ -1,15 +1,15 @@
 ---
 name: wp-admin-ui
 description: "Use when building or extending WordPress admin screens: choosing between legacy PHP/CSS patterns and modern React/DataViews, applying admin color scheme variables, mounting React in wp-admin, and using the correct SCSS tokens."
-compatibility: "WordPress 6.9+. PHP 7.2+ for legacy screens; Node.js and @wordpress/scripts build tooling required for React screens."
+compatibility: "WordPress 7.0+. PHP 7.4+ for legacy screens; Node.js and @wordpress/scripts build tooling required for React screens."
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.0"
+    version: "1.1"
     written: "2026-05-22"
     written_against:
-        wordpress: "6.9"
-        wordpress-components: "28.x"
+        wordpress: "7.0"
+        wordpress-components: "33.1.0"
 ---
 
 # WordPress Admin UI
@@ -86,6 +86,8 @@ For full class and element reference, see [references/legacy-patterns.md](refere
     - `wp-data` (if using the datastore)
     - `wp-dataviews` (if displaying list/table UI)
 
+    > **WP 7.0+:** The post editor is always rendered inside an iframe. Styles enqueued via `admin_enqueue_scripts` do **not** reach the editor. Use `enqueue_block_editor_assets` for CSS that must appear inside the editor. Settings pages and other non-editor screens are unaffected.
+
 3. Mount with `createRoot` from `@wordpress/element`:
 
     ```js
@@ -97,7 +99,7 @@ For full class and element reference, see [references/legacy-patterns.md](refere
     }
     ```
 
-4. For list/table/grid UI, use `@wordpress/dataviews` instead of hand-rolling tables.
+4. For list/table/grid UI, use `@wordpress/dataviews` instead of hand-rolling tables. Note: WP 7.0 changed the grouping API — use `groupBy` (object: `{ field, direction, labelVisibility }`) rather than the deprecated `groupByField` string. See [references/wp6-compat.md](references/wp6-compat.md) for migration notes.
 
 ### 3. Apply color scheme–safe styles
 
@@ -167,6 +169,9 @@ When `/*rtl:*/` comment overrides are unavoidable, model them on the existing pa
 **Dashicons don't render for some users**
 — The dashicons font may not be enqueued on all screens. Migrate to `@wordpress/icons` inline SVGs.
 
+**Editor-targeting CSS has no effect (WP 7.0+)**
+— The post editor is now always rendered inside an iframe; styles enqueued via `admin_enqueue_scripts` are scoped to the outer admin chrome and never enter the editor. Move editor-specific CSS to `enqueue_block_editor_assets`.
+
 **Layout breaks on mobile or when the admin menu is collapsed**
 — CSS is not accounting for the `.folded` / `.auto-fold` body classes or the `#wpadminbar` height (32px desktop / 46px mobile at ≤ 782px). Use the existing core CSS that handles these states rather than overriding.
 
@@ -174,5 +179,6 @@ When `/*rtl:*/` comment overrides are unavoidable, model them on the existing pa
 
 - If a required component or token is missing from `@wordpress/components`, raise it upstream in the Gutenberg repo rather than creating a local workaround.
 - For design decisions (layout, spacing, interaction patterns), consult the Figma WordPress Design System library before implementing.
+- New screens should align with the `@wordpress/ui` package direction — components in `@wordpress/components` are progressively migrating toward `@wordpress/ui` design tokens and visual patterns.
 - Storybook (living component docs): [Gutenberg Storybook](https://wordpress.github.io/gutenberg/)
 - Figma: [WordPress Design System](https://www.figma.com/design/804HN2REV2iap2ytjRQ055/WordPress-Design-System)

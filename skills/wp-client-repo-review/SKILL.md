@@ -1,16 +1,16 @@
 ---
 name: wp-client-repo-review
 description: "Use when reviewing an existing WordPress client repository for security issues, WordPress best practices, and actionable findings after or alongside linting and standards checks."
-compatibility: "WordPress plugins, themes, mu-plugins, and site repos. Requires filesystem access to PHP source files; linting/standards output is optional input."
+compatibility: "WordPress plugins, themes, mu-plugins, and site repos. Requires filesystem access to PHP source files; PHP 7.4+ target environment; linting/standards output is optional input."
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.0"
+    version: "1.1"
     written: "2026-05-22"
     written_against:
-        wordpress: "6.9"
-        phpcs: "3.x"
-        wpcs: "3.x"
+        wordpress: "7.0"
+        phpcs: "3.7.2"
+        wpcs: "3.3.0"
 ---
 
 # WordPress Client Repo Review

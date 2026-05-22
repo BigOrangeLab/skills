@@ -1,17 +1,17 @@
 ---
 name: wp-client-repo-setup
 description: "Use when adopting an existing WordPress client repository and adding or aligning Composer and NPM tooling for WPCS/PHPCS, PHP compatibility checks, and @wordpress/scripts linting or formatting."
-compatibility: "Existing WordPress plugins, themes, mu-plugins, or site repos. Requires PHP 7.2+ target environment; Composer and/or Node.js must be installable."
+compatibility: "Existing WordPress plugins, themes, mu-plugins, or site repos. Requires PHP 7.4+ target environment; Composer and/or Node.js must be installable."
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.0"
+    version: "1.1"
     written: "2026-05-22"
     written_against:
-        wordpress: "6.9"
-        phpcs: "3.x"
-        wpcs: "3.x"
-        wordpress-scripts: "30.x"
+        wordpress: "7.0"
+        phpcs: "3.7.2"
+        wpcs: "3.3.0"
+        wordpress-scripts: "32.2.0"
 ---
 
 # WordPress Client Repo Setup

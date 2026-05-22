@@ -33,27 +33,39 @@ jobs:
                       const rows = JSON.parse(readFileSync('version-report.json', 'utf8'));
                       const date = new Date().toISOString().split('T')[0];
 
+                      // WordPress uses X.Y.Z versioning where X.Y is the meaningful release unit,
+                      // not a semver major. Flag only when 2+ X.Y releases behind.
+                      // All other tools use standard semver: flag on major version change.
+                      const WP_VERSIONED = new Set(['wordpress']);
+                      function wpSeq(v) {
+                        const [x, y] = String(v).match(/^(\d+)\.(\d+)/)?.slice(1).map(Number) ?? [0, 0];
+                        return x * 10 + y;
+                      }
+                      function isStale(tool, writtenVer, currentVer) {
+                        if (WP_VERSIONED.has(tool)) {
+                          return wpSeq(currentVer) - wpSeq(String(writtenVer).replace(/[^0-9.].*/, '')) >= 2;
+                        }
+                        return currentVer.split('.')[0] !== String(writtenVer).replace(/[^0-9].*/, '');
+                      }
+
                       // Build comparison table
                       let table = '| Skill | Written | Tool | Written against | Current upstream |\n';
                       table    += '|---|---|---|---|---|\n';
                       for (const r of rows) {
-                        const flag = (
-                          r.current !== 'no source' &&
-                          !r.current.startsWith('error:') &&
-                          r.current.split('.')[0] !== r.writtenVersion.replace(/[^0-9].*/, '')
-                        ) ? ' ⚠️' : '';
+                        const ok = r.current === 'no source' || r.current.startsWith('error:');
+                        const flag = !ok && isStale(r.tool, r.writtenVersion, r.current) ? ' ⚠️' : '';
                         table += `| \`${r.skill}\` | ${r.writtenDate ?? '—'} | ${r.tool} | \`${r.writtenVersion}\` | \`${r.current}\`${flag} |\n`;
                       }
 
                       const staleCount = rows.filter(r =>
                         r.current !== 'no source' &&
                         !r.current.startsWith('error:') &&
-                        r.current.split('.')[0] !== r.writtenVersion.replace(/[^0-9].*/, '')
+                        isStale(r.tool, r.writtenVersion, r.current)
                       ).length;
 
                       const summary = staleCount > 0
-                        ? `⚠️ **${staleCount} tool(s) have a major version bump** since the skill was written.`
-                        : '✅ All tracked tools are on the same major version as when the skills were written.';
+                        ? `⚠️ **${staleCount} tool(s) have drifted** beyond the version the skill was written against.`
+                        : '✅ All tracked tools are within the expected version range of when the skills were written.';
 
                       const body = [
                         `## Skill version freshness — ${date}`,

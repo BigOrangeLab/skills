@@ -8,7 +8,7 @@ metadata:
     version: "1.0"
     written: "2026-05-07"
     written_against:
-        gh: "2.x"
+        gh: "2.92.0"
 ---
 
 # GitHub CLI (`gh`)
