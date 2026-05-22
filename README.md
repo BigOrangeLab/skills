@@ -43,6 +43,7 @@ Optionally include a `references/` subdirectory for deeper documentation and a `
 | [terminus-wp-cli](skills/terminus-wp-cli/)             | Run WP-CLI commands on Pantheon environments via Terminus. Covers installation, authentication, environment targeting, common commands, and Pantheon-specific cache/session commands. |
 | [wp-client-repo-setup](skills/wp-client-repo-setup/)   | Adopt an existing WordPress client repo and add minimal Composer or NPM tooling for WPCS/PHPCS, PHP compatibility, and `@wordpress/scripts`.                                          |
 | [wp-client-repo-review](skills/wp-client-repo-review/) | Review an existing WordPress client repo for security issues, best-practice risks, and actionable follow-up after or alongside linting.                                               |
+| [wp-admin-ui](skills/wp-admin-ui/)                     | Build or extend WordPress admin screens: legacy PHP/CSS patterns vs. React/DataViews, admin color scheme variables, mounting React in wp-admin, and SCSS design tokens.               |
 
 ### WordPress skills (`vendor/wordpress/`)
 
