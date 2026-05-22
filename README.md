@@ -44,6 +44,7 @@ Optionally include a `references/` subdirectory for deeper documentation and a `
 | [wp-client-repo-setup](skills/wp-client-repo-setup/)   | Adopt an existing WordPress client repo and add minimal Composer or NPM tooling for WPCS/PHPCS, PHP compatibility, and `@wordpress/scripts`.                                          |
 | [wp-client-repo-review](skills/wp-client-repo-review/) | Review an existing WordPress client repo for security issues, best-practice risks, and actionable follow-up after or alongside linting.                                               |
 | [wp-admin-ui](skills/wp-admin-ui/)                     | Build or extend WordPress admin screens: legacy PHP/CSS patterns vs. React/DataViews, admin color scheme variables, mounting React in wp-admin, and SCSS design tokens.               |
+| [local-wp-db](skills/local-wp-db/)                     | Query the database of a WordPress site running under Local by WPEngine on macOS via the site-specific Unix socket.                                                                    |
 
 ### WordPress skills (`vendor/wordpress/`)
 
