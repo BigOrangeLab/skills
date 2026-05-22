@@ -6,7 +6,7 @@ license: MIT
 metadata:
   author: georgestephanis
   version: "1.0"
-  written: "2026-05-22"
+  written: "2026-05-07"
   written_against:
     terminus: "3.x"
     wp-cli: "2.x"

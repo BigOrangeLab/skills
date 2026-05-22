@@ -1,0 +1,113 @@
+name: Skill version freshness check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # Every Monday at 09:00 UTC
+  workflow_dispatch:        # Allow manual runs
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch current upstream versions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/check-skill-versions.mjs > version-report.json
+
+      - name: Create or update freshness issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { readFileSync } = require('fs');
+            const rows = JSON.parse(readFileSync('version-report.json', 'utf8'));
+            const date = new Date().toISOString().split('T')[0];
+
+            // Build comparison table
+            let table = '| Skill | Written | Tool | Written against | Current upstream |\n';
+            table    += '|---|---|---|---|---|\n';
+            for (const r of rows) {
+              const flag = (
+                r.current !== 'no source' &&
+                !r.current.startsWith('error:') &&
+                r.current.split('.')[0] !== r.writtenVersion.replace(/[^0-9].*/, '')
+              ) ? ' ⚠️' : '';
+              table += `| \`${r.skill}\` | ${r.writtenDate ?? '—'} | ${r.tool} | \`${r.writtenVersion}\` | \`${r.current}\`${flag} |\n`;
+            }
+
+            const staleCount = rows.filter(r =>
+              r.current !== 'no source' &&
+              !r.current.startsWith('error:') &&
+              r.current.split('.')[0] !== r.writtenVersion.replace(/[^0-9].*/, '')
+            ).length;
+
+            const summary = staleCount > 0
+              ? `⚠️ **${staleCount} tool(s) have a major version bump** since the skill was written.`
+              : '✅ All tracked tools are on the same major version as when the skills were written.';
+
+            const body = [
+              `## Skill version freshness — ${date}`,
+              '',
+              summary,
+              '',
+              'A ⚠️ flag means the upstream major version has advanced beyond `written_against`. Review the skill and update its `written_against` and `written` fields after refreshing.',
+              '',
+              'Rows showing `no source` (Local by WPEngine, MySQL) have no public release API and must be checked manually.',
+              '',
+              table,
+              '',
+              '---',
+              '*Auto-updated weekly by the [version-check workflow](../../actions/workflows/version-check.yml). Trigger a manual run from the Actions tab at any time.*',
+            ].join('\n');
+
+            const LABEL = 'skill-freshness';
+
+            // Ensure the label exists
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: LABEL,
+                color: 'E4E669',
+                description: 'Automated skill version freshness tracking',
+              });
+            } catch { /* label already exists */ }
+
+            // Find an existing open issue with this label
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: LABEL,
+              state: 'open',
+              per_page: 1,
+            });
+
+            if (existing.length) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing[0].number,
+                title: 'Skill version freshness report',
+                body,
+              });
+              core.info(`Updated issue #${existing[0].number}`);
+            } else {
+              const { data: created } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Skill version freshness report',
+                body,
+                labels: [LABEL],
+              });
+              core.info(`Created issue #${created.number}`);
+            }
