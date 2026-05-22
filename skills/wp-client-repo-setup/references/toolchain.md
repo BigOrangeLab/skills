@@ -86,7 +86,7 @@ Use the scripts that match file types actually present — do not add `lint:css`
 
 ```json
 {
-    "extends": ["@wordpress/stylelint-config"]
+	"extends": ["@wordpress/stylelint-config"]
 }
 ```
 

@@ -4,14 +4,14 @@ description: "Use when adopting an existing WordPress client repository and addi
 compatibility: "Existing WordPress plugins, themes, mu-plugins, or site repos. Requires PHP 7.2+ target environment; Composer and/or Node.js must be installable."
 license: MIT
 metadata:
-  author: georgestephanis
-  version: "1.0"
-  written: "2026-05-22"
-  written_against:
-    wordpress: "6.9"
-    phpcs: "3.x"
-    wpcs: "3.x"
-    wordpress-scripts: "30.x"
+    author: georgestephanis
+    version: "1.0"
+    written: "2026-05-22"
+    written_against:
+        wordpress: "6.9"
+        phpcs: "3.x"
+        wpcs: "3.x"
+        wordpress-scripts: "30.x"
 ---
 
 # WordPress Client Repo Setup
@@ -32,33 +32,33 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 ## Procedure
 
 1. Inspect the repo before proposing changes.
-   - Detect whether Composer and NPM already exist.
-   - Reuse the existing package manager and script naming style.
-   - Extend existing lint or format scripts rather than replacing them.
+    - Detect whether Composer and NPM already exist.
+    - Reuse the existing package manager and script naming style.
+    - Extend existing lint or format scripts rather than replacing them.
 
 2. Add only the tooling that matches the code present.
-   - If PHP exists, prefer Composer-based PHP tooling.
-   - If JS, JSX, CSS, or SCSS exists, prefer NPM-based front-end tooling.
-   - Do not add NPM to a PHP-only repo unless the task explicitly needs it.
+    - If PHP exists, prefer Composer-based PHP tooling.
+    - If JS, JSX, CSS, or SCSS exists, prefer NPM-based front-end tooling.
+    - Do not add NPM to a PHP-only repo unless the task explicitly needs it.
 
 3. For PHP, prefer a minimal WordPress-oriented toolchain.
-   - Add `squizlabs/php_codesniffer`.
-   - Add `wp-coding-standards/wpcs`.
-   - Add `dealerdirect/phpcodesniffer-composer-installer`.
-   - Add `phpcompatibility/phpcompatibility-wp` when target hosting constraints or support promises justify it.
-   - Add `phpcs.xml.dist` if the repo does not already define a ruleset.
-   - See [references/toolchain.md](references/toolchain.md) for the canonical `phpcs.xml.dist` template and `composer.json` script conventions.
+    - Add `squizlabs/php_codesniffer`.
+    - Add `wp-coding-standards/wpcs`.
+    - Add `dealerdirect/phpcodesniffer-composer-installer`.
+    - Add `phpcompatibility/phpcompatibility-wp` when target hosting constraints or support promises justify it.
+    - Add `phpcs.xml.dist` if the repo does not already define a ruleset.
+    - See [references/toolchain.md](references/toolchain.md) for the canonical `phpcs.xml.dist` template and `composer.json` script conventions.
 
 4. For JS, JSX, CSS, and SCSS, prefer WordPress-native tooling.
-   - Add `@wordpress/scripts` for linting and formatting when it fits the project.
-   - Add `@wordpress/stylelint-config` when style linting is needed.
-   - Use scripts such as `lint:js`, `lint:css`, `format`, and `format:check` only if they fit the repo's conventions.
-   - See [references/toolchain.md](references/toolchain.md) for package install commands, script templates, and coexistence notes.
+    - Add `@wordpress/scripts` for linting and formatting when it fits the project.
+    - Add `@wordpress/stylelint-config` when style linting is needed.
+    - Use scripts such as `lint:js`, `lint:css`, `format`, and `format:check` only if they fit the repo's conventions.
+    - See [references/toolchain.md](references/toolchain.md) for package install commands, script templates, and coexistence notes.
 
 5. Keep adoption incremental.
-   - Put new dependencies in development-only sections.
-   - Avoid broad formatting churn unless the task explicitly asks for normalization.
-   - Explain any exclusions or relaxations for legacy code.
+    - Put new dependencies in development-only sections.
+    - Avoid broad formatting churn unless the task explicitly asks for normalization.
+    - Explain any exclusions or relaxations for legacy code.
 
 ## Verification
 

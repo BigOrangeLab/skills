@@ -77,13 +77,13 @@ terminus remote:wp <site>.live -- cron event run <hook-name>
 
 ## Useful flags
 
-| Flag | Purpose |
-|---|---|
-| `--yes` | Auto-confirm all WP-CLI prompts |
-| `--no-interaction` | Suppress all interactive questions |
-| `--progress` | Show a progress bar (requires TTY) |
-| `--retry=N` | Retry on failure up to N times |
-| `-v` / `-vv` / `-vvv` | Increase verbosity for debugging |
+| Flag                  | Purpose                            |
+| --------------------- | ---------------------------------- |
+| `--yes`               | Auto-confirm all WP-CLI prompts    |
+| `--no-interaction`    | Suppress all interactive questions |
+| `--progress`          | Show a progress bar (requires TTY) |
+| `--retry=N`           | Retry on failure up to N times     |
+| `-v` / `-vv` / `-vvv` | Increase verbosity for debugging   |
 
 Example combining Terminus and WP-CLI flags:
 

@@ -65,14 +65,14 @@ gh api graphql --field query='
 
 ## Environment variables
 
-| Variable | Purpose |
-|---|---|
+| Variable                    | Purpose                                                 |
+| --------------------------- | ------------------------------------------------------- |
 | `GH_TOKEN` / `GITHUB_TOKEN` | Token for authentication (overrides stored credentials) |
-| `GH_HOST` | GitHub hostname (for Enterprise Server) |
-| `GH_ENTERPRISE_TOKEN` | Token for the Enterprise Server host |
-| `GH_REPO` | Override the inferred `owner/repo` |
-| `GH_PAGER` | Pager for output (set to `cat` to disable paging) |
-| `NO_COLOR` | Disable color output |
+| `GH_HOST`                   | GitHub hostname (for Enterprise Server)                 |
+| `GH_ENTERPRISE_TOKEN`       | Token for the Enterprise Server host                    |
+| `GH_REPO`                   | Override the inferred `owner/repo`                      |
+| `GH_PAGER`                  | Pager for output (set to `cat` to disable paging)       |
+| `NO_COLOR`                  | Disable color output                                    |
 
 ## Aliases
 

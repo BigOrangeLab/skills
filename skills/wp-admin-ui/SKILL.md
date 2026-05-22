@@ -4,12 +4,12 @@ description: "Use when building or extending WordPress admin screens: choosing b
 compatibility: "WordPress 6.9+. PHP 7.2+ for legacy screens; Node.js and @wordpress/scripts build tooling required for React screens."
 license: MIT
 metadata:
-  author: georgestephanis
-  version: "1.0"
-  written: "2026-05-22"
-  written_against:
-    wordpress: "6.9"
-    wordpress-components: "28.x"
+    author: georgestephanis
+    version: "1.0"
+    written: "2026-05-22"
+    written_against:
+        wordpress: "6.9"
+        wordpress-components: "28.x"
 ---
 
 # WordPress Admin UI
@@ -36,12 +36,12 @@ Do NOT use for block editor or site editor UI — use `wp-block-development` or 
 
 ### 1. Choose the rendering approach
 
-| Situation | Use |
-|---|---|
-| Simple settings form, no complex interactivity | Legacy PHP + `.wrap` / `.form-table` patterns |
-| List, table, or grid of data objects | React + `@wordpress/dataviews` |
-| Complex interactive UI, wizard, or custom controls | React + `@wordpress/components` |
-| Extending an existing legacy screen | Match its approach; do not mix paradigms in one screen |
+| Situation                                          | Use                                                    |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| Simple settings form, no complex interactivity     | Legacy PHP + `.wrap` / `.form-table` patterns          |
+| List, table, or grid of data objects               | React + `@wordpress/dataviews`                         |
+| Complex interactive UI, wizard, or custom controls | React + `@wordpress/components`                        |
+| Extending an existing legacy screen                | Match its approach; do not mix paradigms in one screen |
 
 ### 2a. Legacy PHP screen
 
@@ -49,17 +49,21 @@ Follow the canonical markup conventions so the screen feels native and notices i
 
 ```html
 <div class="wrap">
-    <h1 class="wp-heading-inline">Screen Title</h1>
-    <a href="#" class="page-title-action">Add New</a>
-    <hr class="wp-header-end">
-    <!-- notices are injected here by WordPress -->
-    <form method="post" action="options.php">
-        <!-- Settings API fields -->
-        <table class="form-table" role="presentation">...</table>
-        <p class="submit">
-            <button type="submit" class="button button-primary">Save Changes</button>
-        </p>
-    </form>
+	<h1 class="wp-heading-inline">Screen Title</h1>
+	<a href="#" class="page-title-action">Add New</a>
+	<hr class="wp-header-end" />
+	<!-- notices are injected here by WordPress -->
+	<form method="post" action="options.php">
+		<!-- Settings API fields -->
+		<table class="form-table" role="presentation">
+			...
+		</table>
+		<p class="submit">
+			<button type="submit" class="button button-primary">
+				Save Changes
+			</button>
+		</p>
+	</form>
 </div>
 ```
 
@@ -68,25 +72,30 @@ For full class and element reference, see [references/legacy-patterns.md](refere
 ### 2b. React screen
 
 1. In the PHP page callback, output only an empty mount point inside `.wrap`:
-   ```php
-   echo '<div class="wrap"><div id="my-feature-root"></div></div>';
-   ```
-   Do not render content in PHP that React will replace — it causes hydration flashes and screen-reader regressions.
+
+    ```php
+    echo '<div class="wrap"><div id="my-feature-root"></div></div>';
+    ```
+
+    Do not render content in PHP that React will replace — it causes hydration flashes and screen-reader regressions.
 
 2. Enqueue the required script handles. Minimum set for most screens:
-   - `wp-element` (React + `createRoot`)
-   - `wp-components` + its style handle (delivers the WPDS look)
-   - `wp-i18n`
-   - `wp-data` (if using the datastore)
-   - `wp-dataviews` (if displaying list/table UI)
+    - `wp-element` (React + `createRoot`)
+    - `wp-components` + its style handle (delivers the WPDS look)
+    - `wp-i18n`
+    - `wp-data` (if using the datastore)
+    - `wp-dataviews` (if displaying list/table UI)
 
 3. Mount with `createRoot` from `@wordpress/element`:
-   ```js
-   import { createRoot } from '@wordpress/element';
-   import App from './app';
-   const node = document.getElementById( 'my-feature-root' );
-   if ( node ) { createRoot( node ).render( <App /> ); }
-   ```
+
+    ```js
+    import { createRoot } from "@wordpress/element";
+    import App from "./app";
+    const node = document.getElementById("my-feature-root");
+    if (node) {
+    	createRoot(node).render(<App />);
+    }
+    ```
 
 4. For list/table/grid UI, use `@wordpress/dataviews` instead of hand-rolling tables.
 
@@ -96,9 +105,10 @@ For full class and element reference, see [references/legacy-patterns.md](refere
 
 ```css
 .my-button:focus {
-    border-color: var(--wp-admin-theme-color, #3858e9);
-    box-shadow: 0 0 0 var(--wp-admin-border-width-focus, 1.5px) var(--wp-admin-theme-color, #3858e9);
-    outline: 2px solid transparent;
+	border-color: var(--wp-admin-theme-color, #3858e9);
+	box-shadow: 0 0 0 var(--wp-admin-border-width-focus, 1.5px)
+		var(--wp-admin-theme-color, #3858e9);
+	outline: 2px solid transparent;
 }
 ```
 
@@ -111,9 +121,9 @@ For SCSS authored inside core (spacing, typography, radii, elevation), use the t
 Prefer inline SVGs via `@wordpress/icons`. Do not use `dashicons` in new screens.
 
 ```jsx
-import { plus } from '@wordpress/icons';
-import { Icon } from '@wordpress/components';
-<Icon icon={ plus } />
+import { plus } from "@wordpress/icons";
+import { Icon } from "@wordpress/components";
+<Icon icon={plus} />;
 ```
 
 ### 5. RTL support
@@ -164,5 +174,5 @@ When `/*rtl:*/` comment overrides are unavoidable, model them on the existing pa
 
 - If a required component or token is missing from `@wordpress/components`, raise it upstream in the Gutenberg repo rather than creating a local workaround.
 - For design decisions (layout, spacing, interaction patterns), consult the Figma WordPress Design System library before implementing.
-- Storybook (living component docs): https://wordpress.github.io/gutenberg/
-- Figma: https://www.figma.com/design/804HN2REV2iap2ytjRQ055/WordPress-Design-System
+- Storybook (living component docs): [Gutenberg Storybook](https://wordpress.github.io/gutenberg/)
+- Figma: [WordPress Design System](https://www.figma.com/design/804HN2REV2iap2ytjRQ055/WordPress-Design-System)

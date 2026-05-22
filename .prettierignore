@@ -1,0 +1,9 @@
+node_modules/
+vendor/
+package-lock.json
+**/*.js
+**/*.mjs
+**/*.cjs
+**/*.jsx
+**/*.ts
+**/*.tsx

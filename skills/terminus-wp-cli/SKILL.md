@@ -4,12 +4,12 @@ description: "Run WP-CLI commands on Pantheon environments via Terminus. Use whe
 compatibility: "Pantheon-hosted WordPress sites. Requires Terminus ≥3, PHP 8.2+, OpenSSH 7.8+."
 license: MIT
 metadata:
-  author: georgestephanis
-  version: "1.0"
-  written: "2026-05-07"
-  written_against:
-    terminus: "3.x"
-    wp-cli: "2.x"
+    author: georgestephanis
+    version: "1.0"
+    written: "2026-05-07"
+    written_against:
+        terminus: "3.x"
+        wp-cli: "2.x"
 ---
 
 # Terminus WP-CLI
@@ -68,12 +68,12 @@ Everything after `--` is passed verbatim to WP-CLI on the remote environment.
 
 #### Environment notes
 
-| `<env>` | Pantheon environment | Notes |
-|---|---|---|
-| `dev` | Development | File writes allowed; safe for testing |
-| `test` | Staging | `DISALLOW_FILE_MODS=true`; no UI installs, but WP-CLI works |
-| `live` | Production | `DISALLOW_FILE_MODS=true`; proceed carefully |
-| `<branch>` | Multidev | Any multidev by its branch name |
+| `<env>`    | Pantheon environment | Notes                                                       |
+| ---------- | -------------------- | ----------------------------------------------------------- |
+| `dev`      | Development          | File writes allowed; safe for testing                       |
+| `test`     | Staging              | `DISALLOW_FILE_MODS=true`; no UI installs, but WP-CLI works |
+| `live`     | Production           | `DISALLOW_FILE_MODS=true`; proceed carefully                |
+| `<branch>` | Multidev             | Any multidev by its branch name                             |
 
 For common command patterns, see [references/commands.md](references/commands.md).
 For Pantheon-specific WP-CLI commands (page cache, sessions), see [references/pantheon-specific.md](references/pantheon-specific.md).

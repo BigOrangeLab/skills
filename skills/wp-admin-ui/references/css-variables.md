@@ -4,13 +4,13 @@ These are the **only** CSS custom properties that wp-admin exposes at runtime. E
 
 Color scheme stylesheets override these five variables. Your UI should consume them so it respects the user's chosen scheme.
 
-| Variable | Modern default | Use for |
-|---|---|---|
-| `--wp-admin-theme-color` | `#3858e9` | Primary accent — link color, primary button bg, active states |
-| `--wp-admin-theme-color--rgb` | `56, 88, 233` | Tinted backgrounds: `rgba(var(--wp-admin-theme-color--rgb), 0.04)` |
-| `--wp-admin-theme-color-darker-10` | `#2145e6` | Hover state on primary actions |
-| `--wp-admin-theme-color-darker-20` | `#183ad6` | Active/pressed state, darker accents |
-| `--wp-admin-border-width-focus` | `1.5px` | Focus ring width |
+| Variable                           | Modern default | Use for                                                            |
+| ---------------------------------- | -------------- | ------------------------------------------------------------------ |
+| `--wp-admin-theme-color`           | `#3858e9`      | Primary accent — link color, primary button bg, active states      |
+| `--wp-admin-theme-color--rgb`      | `56, 88, 233`  | Tinted backgrounds: `rgba(var(--wp-admin-theme-color--rgb), 0.04)` |
+| `--wp-admin-theme-color-darker-10` | `#2145e6`      | Hover state on primary actions                                     |
+| `--wp-admin-theme-color-darker-20` | `#183ad6`      | Active/pressed state, darker accents                               |
+| `--wp-admin-border-width-focus`    | `1.5px`        | Focus ring width                                                   |
 
 ## Canonical focus pattern
 
@@ -18,9 +18,10 @@ Used throughout core (`src/wp-includes/css/buttons.css`, `src/wp-includes/css/ed
 
 ```css
 .my-element:focus {
-    border-color: var(--wp-admin-theme-color, #3858e9);
-    box-shadow: 0 0 0 var(--wp-admin-border-width-focus, 1.5px) var(--wp-admin-theme-color, #3858e9);
-    outline: 2px solid transparent;
+	border-color: var(--wp-admin-theme-color, #3858e9);
+	box-shadow: 0 0 0 var(--wp-admin-border-width-focus, 1.5px)
+		var(--wp-admin-theme-color, #3858e9);
+	outline: 2px solid transparent;
 }
 ```
 

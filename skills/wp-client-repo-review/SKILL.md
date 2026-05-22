@@ -4,13 +4,13 @@ description: "Use when reviewing an existing WordPress client repository for sec
 compatibility: "WordPress plugins, themes, mu-plugins, and site repos. Requires filesystem access to PHP source files; linting/standards output is optional input."
 license: MIT
 metadata:
-  author: georgestephanis
-  version: "1.0"
-  written: "2026-05-22"
-  written_against:
-    wordpress: "6.9"
-    phpcs: "3.x"
-    wpcs: "3.x"
+    author: georgestephanis
+    version: "1.0"
+    written: "2026-05-22"
+    written_against:
+        wordpress: "6.9"
+        phpcs: "3.x"
+        wpcs: "3.x"
 ---
 
 # WordPress Client Repo Review
@@ -31,34 +31,34 @@ Do NOT use as a substitute for running linting and standards tools — run those
 ## Procedure
 
 1. Start from the riskiest surfaces first.
-   - Look at SQL queries, form handlers, REST endpoints, upload flows, serialization, and privileged actions.
-   - Use existing lint or standards output to find the highest-signal paths.
+    - Look at SQL queries, form handlers, REST endpoints, upload flows, serialization, and privileged actions.
+    - Use existing lint or standards output to find the highest-signal paths.
 
 2. Prioritize findings in this order.
-   - SQL safety and prepared queries
-   - Escaping and output handling
-   - Input sanitization and validation
-   - Nonces and capability checks
-   - REST API `permission_callback` coverage
-   - File access, upload, and deserialization risks
-   - Deprecated APIs and compatibility issues
-   - Performance issues caused by repeated queries, autoload bloat, or unbounded hooks
+    - SQL safety and prepared queries
+    - Escaping and output handling
+    - Input sanitization and validation
+    - Nonces and capability checks
+    - REST API `permission_callback` coverage
+    - File access, upload, and deserialization risks
+    - Deprecated APIs and compatibility issues
+    - Performance issues caused by repeated queries, autoload bloat, or unbounded hooks
 
-   For detailed patterns and function-level examples in each category, see [references/security-checklist.md](references/security-checklist.md).
+    For detailed patterns and function-level examples in each category, see [references/security-checklist.md](references/security-checklist.md).
 
 3. Keep findings actionable.
-   - Report concrete bugs, security issues, regressions, and missing tests before style commentary.
-   - Prefer the smallest code reference set that supports the finding.
-   - Distinguish between must-fix security issues and follow-up cleanup.
+    - Report concrete bugs, security issues, regressions, and missing tests before style commentary.
+    - Prefer the smallest code reference set that supports the finding.
+    - Distinguish between must-fix security issues and follow-up cleanup.
 
 4. Use WordPress conventions as the standard.
-   - Check capability and nonce handling for privileged actions.
-   - Check sanitization on input boundaries and escaping on output boundaries.
-   - Check REST exposure for schema, validation, and permissions.
+    - Check capability and nonce handling for privileged actions.
+    - Check sanitization on input boundaries and escaping on output boundaries.
+    - Check REST exposure for schema, validation, and permissions.
 
 5. Tie review output back to verification.
-   - Mention which command output, code path, or test surface supports each finding.
-   - Call out residual risk if tooling is absent or incomplete.
+    - Mention which command output, code path, or test surface supports each finding.
+    - Call out residual risk if tooling is absent or incomplete.
 
 ## Verification
 

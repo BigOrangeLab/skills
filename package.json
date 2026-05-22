@@ -1,0 +1,25 @@
+{
+	"name": "bol-skills",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"lint:md": "markdownlint-cli2",
+		"lint": "npm run format:check && npm run lint:md",
+		"prepare": "simple-git-hooks"
+	},
+	"devDependencies": {
+		"lint-staged": "^16.2.6",
+		"markdownlint-cli2": "^0.18.1",
+		"prettier": "^3.6.2",
+		"simple-git-hooks": "^2.13.1"
+	},
+	"lint-staged": {
+		"*.{md,json,yml,yaml}": "prettier --write",
+		"*.md": "markdownlint-cli2 --fix"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "npx lint-staged"
+	}
+}

@@ -4,11 +4,11 @@ description: "Use the gh CLI to manage GitHub pull requests, issues, releases, a
 compatibility: "Any platform with gh installed. Supports GitHub.com and GitHub Enterprise Server."
 license: MIT
 metadata:
-  author: georgestephanis
-  version: "1.0"
-  written: "2026-05-07"
-  written_against:
-    gh: "2.x"
+    author: georgestephanis
+    version: "1.0"
+    written: "2026-05-07"
+    written_against:
+        gh: "2.x"
 ---
 
 # GitHub CLI (`gh`)

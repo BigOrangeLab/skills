@@ -4,12 +4,12 @@ description: "Use when querying or inspecting the database of a WordPress site r
 compatibility: "macOS. Requires Local by WPEngine running with the target site started. MySQL client must be installed (Homebrew: brew install mysql-client)."
 license: MIT
 metadata:
-  author: georgestephanis
-  version: "1.0"
-  written: "2026-05-22"
-  written_against:
-    local-by-wpengine: "6.x"
-    mysql: "8.0"
+    author: georgestephanis
+    version: "1.0"
+    written: "2026-05-22"
+    written_against:
+        local-by-wpengine: "6.x"
+        mysql: "8.0"
 ---
 
 # Local by WPEngine — Database Access
@@ -50,7 +50,7 @@ grep -n "Acme\|acme" "$HOME/Library/Application Support/Local/sites.json"
 
 ### 2. Construct the socket path
 
-```
+```text
 ~/Library/Application Support/Local/run/<SITE_ID>/mysql/mysqld.sock
 ```
 

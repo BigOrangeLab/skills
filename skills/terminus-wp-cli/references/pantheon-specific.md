@@ -22,6 +22,7 @@ terminus remote:wp <site>.live -- pantheon cache set-maintenance-mode disabled
 ```
 
 `purge-key` accepts the surrogate keys Pantheon assigns to cached responses. Common key patterns:
+
 - `post-<ID>` — all pages that include a given post
 - `term-<ID>` — all pages that include a given term
 - `user-<ID>` — pages associated with a given user

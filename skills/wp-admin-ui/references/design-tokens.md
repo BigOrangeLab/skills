@@ -10,27 +10,27 @@ For React components, prefer the equivalent token from `@wordpress/components` (
 
 ## Spacing (4px base grid)
 
-| Token | Value | Use for |
-|---|---|---|
-| `$grid-unit-05` | 4px | Micro gap, icon padding |
-| `$grid-unit-10` | 8px | Tight spacing |
-| `$grid-unit-15` | 12px | |
-| `$grid-unit-20` | 16px | Standard padding |
-| `$grid-unit-30` | 24px | Section gap |
-| `$grid-unit-40` | 32px | Large section gap |
-| `$grid-unit-50` | 40px | |
-| `$grid-unit-60` | 48px | |
-| `$grid-unit-70` | 56px | |
+| Token           | Value | Use for                 |
+| --------------- | ----- | ----------------------- |
+| `$grid-unit-05` | 4px   | Micro gap, icon padding |
+| `$grid-unit-10` | 8px   | Tight spacing           |
+| `$grid-unit-15` | 12px  |                         |
+| `$grid-unit-20` | 16px  | Standard padding        |
+| `$grid-unit-30` | 24px  | Section gap             |
+| `$grid-unit-40` | 32px  | Large section gap       |
+| `$grid-unit-50` | 40px  |                         |
+| `$grid-unit-60` | 48px  |                         |
+| `$grid-unit-70` | 56px  |                         |
 
 ## Border radius
 
-| Token | Value | Use for |
-|---|---|---|
-| `$radius-xs` | 1px | |
-| `$radius-s` | 2px | Inputs, buttons |
-| `$radius-m` | 4px | Focus rings |
-| `$radius-l` | 8px | Cards, dashboard widgets |
-| `$radius-full` | 9999px | Pills, avatars |
+| Token          | Value  | Use for                  |
+| -------------- | ------ | ------------------------ |
+| `$radius-xs`   | 1px    |                          |
+| `$radius-s`    | 2px    | Inputs, buttons          |
+| `$radius-m`    | 4px    | Focus rings              |
+| `$radius-l`    | 8px    | Cards, dashboard widgets |
+| `$radius-full` | 9999px | Pills, avatars           |
 
 Note: post editor metaboxes intentionally use radius 0.
 
@@ -42,43 +42,43 @@ There is intentionally no `$gray-500`.
 
 ## Semantic / alert colors (theme-independent)
 
-| Token | Use |
-|---|---|
-| `$alert-yellow` | Warning text |
+| Token              | Use                       |
+| ------------------ | ------------------------- |
+| `$alert-yellow`    | Warning text              |
 | `$alert-yellow-bg` | Warning notice background |
-| `$alert-green` | Success text |
-| `$alert-green-bg` | Success notice background |
-| `$alert-red` | Error text |
-| `$alert-red-bg` | Error notice background |
-| `$alert-blue` | Info text |
-| `$alert-blue-bg` | Info notice background |
+| `$alert-green`     | Success text              |
+| `$alert-green-bg`  | Success notice background |
+| `$alert-red`       | Error text                |
+| `$alert-red-bg`    | Error notice background   |
+| `$alert-blue`      | Info text                 |
+| `$alert-blue-bg`   | Info notice background    |
 
 ## Button heights
 
-| Token | Value | Context |
-|---|---|---|
-| `$button-height-default` | 40px | New default ("next-default-40px") |
-| `$button-height-compact` | 32px | Dense toolbars |
-| `$button-height-small` | 24px | Very tight contexts |
+| Token                    | Value | Context                           |
+| ------------------------ | ----- | --------------------------------- |
+| `$button-height-default` | 40px  | New default ("next-default-40px") |
+| `$button-height-compact` | 32px  | Dense toolbars                    |
+| `$button-height-small`   | 24px  | Very tight contexts               |
 
 ## Input borders
 
-| Token | Value |
-|---|---|
-| `$input-border-width-default` | 1px |
-| `$input-border-width-focus` | 1.5px |
+| Token                         | Value |
+| ----------------------------- | ----- |
+| `$input-border-width-default` | 1px   |
+| `$input-border-width-focus`   | 1.5px |
 
 ## Typography
 
-| Token | Value | Use |
-|---|---|---|
-| `$font-size-xs` | 11px | |
-| `$font-size-s` | 12px | |
-| `$font-size-m` | 13px | Base body |
-| `$font-size-l` | 15px | |
-| `$font-size-xl` | 20px | Screen headings |
-| `$font-weight-regular` | 400 | |
-| `$font-weight-medium` | 500 | |
+| Token                  | Value | Use             |
+| ---------------------- | ----- | --------------- |
+| `$font-size-xs`        | 11px  |                 |
+| `$font-size-s`         | 12px  |                 |
+| `$font-size-m`         | 13px  | Base body       |
+| `$font-size-l`         | 15px  |                 |
+| `$font-size-xl`        | 20px  | Screen headings |
+| `$font-weight-regular` | 400   |                 |
+| `$font-weight-medium`  | 500   |                 |
 
 ## Elevation (shadows)
 
