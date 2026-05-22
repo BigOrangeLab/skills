@@ -17,6 +17,7 @@ Expanded checklist for each category in the review procedure. Use alongside the 
 - `echo` or `print` of translated strings uses `esc_html_e()` / `esc_attr_e()` — not `_e()` on user-controlled values
 - JSON output uses `wp_json_encode()`, not `json_encode()` directly
 - No raw `echo $_GET[...]` or equivalent
+- **WPCS 3.3.0+:** `wp_kses_allowed_html()` is no longer treated as an escaping function by WPCS sniffs. Code that passes its return value directly into `wp_kses()` is still correct, but code that used it as a standalone escape (relying on WPCS not flagging it) may now produce warnings. Verify that all `wp_kses()` call sites explicitly pass the allowed-tags array or a `wp_kses_allowed_html()` call as the second argument.
 
 ## Input sanitization and validation
 
@@ -36,6 +37,15 @@ Expanded checklist for each category in the review procedure. Use alongside the 
 - Every `register_rest_route()` call has a `permission_callback` that is not `__return_true` unless truly public
 - Public endpoints explicitly document why they are public (comment or README note)
 - Schema args include `sanitize_callback` and `validate_callback` where user input flows in
+
+## Block editor Client-Side Abilities (WP 7.0+)
+
+WordPress 7.0 introduced the Client-Side Abilities API, which lets blocks declare editor capabilities via a `permissionCallback` on the server and consume them in JS without exposing raw capability names.
+
+- Every `register_block_type()` call that exposes editor-gated actions defines a `permissionCallback` on the server — not raw `current_user_can()` checks baked into REST routes
+- `permissionCallback` closures receive the full `WP_REST_Request` context; verify they don't fall back to `return true` in edge cases (e.g., missing post ID, anonymous request)
+- Client-side JS consuming ability results must not assume a `true` result persists — re-check on state changes (post status change, user role switch in multisite)
+- JSON schema args on block-registered REST routes follow the same `sanitize_callback` / `validate_callback` rules as hand-registered routes
 
 ## File access, upload, and deserialization risks
 

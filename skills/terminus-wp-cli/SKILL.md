@@ -1,15 +1,15 @@
 ---
 name: terminus-wp-cli
 description: "Run WP-CLI commands on Pantheon environments via Terminus. Use when SSH WP-CLI is unavailable and you need to manage WordPress on dev/test/live/multidev."
-compatibility: "Pantheon-hosted WordPress sites. Requires Terminus ≥3, PHP 8.2+, OpenSSH 7.8+."
+compatibility: "Pantheon-hosted WordPress sites. Requires Terminus ≥4, PHP 8.2+, OpenSSH 7.8+."
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.0"
-    written: "2026-05-07"
+    version: "1.1"
+    written: "2026-05-22"
     written_against:
-        terminus: "3.x"
-        wp-cli: "2.x"
+        terminus: "4.2.2"
+        wp-cli: "2.12.0"
 ---
 
 # Terminus WP-CLI
@@ -36,7 +36,7 @@ Do NOT use for self-hosted or non-Pantheon WordPress installs — use `wp` direc
 ### 1. Verify Terminus is installed and authenticated
 
 ```bash
-terminus --version      # expect 3.x
+terminus --version      # expect 4.x
 terminus auth:whoami    # should print your Pantheon email
 ```
 
@@ -45,18 +45,28 @@ If not installed, see [references/installation.md](references/installation.md).
 If not authenticated:
 
 ```bash
-terminus auth:login --machine-token=<TOKEN> --email=<you@example.com>
+terminus auth:login --machine-token=<TOKEN>
 ```
 
 Generate a machine token at **Pantheon dashboard → Personal Settings → Machine Tokens**.
 
-### 2. Confirm SSH key is loaded (avoids password prompts)
+### 2. Confirm SSH key is loaded (required — password auth is no longer accepted)
+
+Pantheon **requires** SSH key authentication for all remote connections (`remote:wp`, `remote:drush`, SFTP, Git). Password-based auth was removed platform-wide in April 2024.
 
 ```bash
 ssh-add -l    # should list at least one key
 ```
 
-If empty: `ssh-add ~/.ssh/id_ed25519` (or your key path). Add the public key to **Pantheon dashboard → Personal Settings → SSH Keys** if not already present.
+If empty, load your key:
+
+```bash
+ssh-add ~/.ssh/id_rsa    # or id_ecdsa — see note below
+```
+
+> **Key type:** Pantheon supports **RSA** and **ECDSA (256-bit)** keys. **Ed25519 is not supported.** If your default key is `id_ed25519`, generate a separate RSA or ECDSA key for Pantheon use.
+
+Add the public key to **Pantheon dashboard → Personal Settings → SSH Keys** if not already present.
 
 ### 3. Run the WP-CLI command
 
@@ -99,7 +109,7 @@ Pass `--yes` to both Terminus (before `--`) and WP-CLI (after `--`) to suppress 
 — Double-check the site machine name and environment name. List available sites with `terminus site:list`.
 
 **`SSH permission denied` or connection timeout**
-— SSH key not added to Pantheon or not loaded locally. Repeat step 2 and ensure the public key is in the Pantheon dashboard.
+— SSH key not added to Pantheon or not loaded locally. Repeat step 2. Also check: if your loaded key is an Ed25519 key (`id_ed25519`), it will be rejected — Pantheon requires RSA or ECDSA. Generate a new key (`ssh-keygen -t rsa -b 4096`) and add it to the Pantheon dashboard.
 
 **`Error: This environment is in Git mode`**
 — Switch to SFTP mode in the Pantheon dashboard (dev environments only) if the command needs to write to the filesystem. WP-CLI commands that don't modify files work in either mode.
