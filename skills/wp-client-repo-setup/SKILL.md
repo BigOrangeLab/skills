@@ -1,7 +1,11 @@
 ---
 name: wp-client-repo-setup
 description: "Use when adopting an existing WordPress client repository and adding or aligning Composer and NPM tooling for WPCS/PHPCS, PHP compatibility checks, and @wordpress/scripts linting or formatting."
-compatibility: "Claude Code and Claude desktop workflows using ~/.claude/skills"
+compatibility: "Existing WordPress plugins, themes, mu-plugins, or site repos. Requires PHP 7.2+ target environment; Composer and/or Node.js must be installable."
+license: MIT
+metadata:
+  author: georgestephanis
+  version: "1.0"
 ---
 
 # WordPress Client Repo Setup
@@ -37,19 +41,18 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
    - Add `dealerdirect/phpcodesniffer-composer-installer`.
    - Add `phpcompatibility/phpcompatibility-wp` when target hosting constraints or support promises justify it.
    - Add `phpcs.xml.dist` if the repo does not already define a ruleset.
+   - See [references/toolchain.md](references/toolchain.md) for the canonical `phpcs.xml.dist` template and `composer.json` script conventions.
 
 4. For JS, JSX, CSS, and SCSS, prefer WordPress-native tooling.
    - Add `@wordpress/scripts` for linting and formatting when it fits the project.
    - Add `@wordpress/stylelint-config` when style linting is needed.
    - Use scripts such as `lint:js`, `lint:css`, `format`, and `format:check` only if they fit the repo's conventions.
+   - See [references/toolchain.md](references/toolchain.md) for package install commands, script templates, and coexistence notes.
 
 5. Keep adoption incremental.
    - Put new dependencies in development-only sections.
    - Avoid broad formatting churn unless the task explicitly asks for normalization.
    - Explain any exclusions or relaxations for legacy code.
-
-6. TODO: support a configurable preferred stack profile.
-   - Examples: `PHPCS only`, `PHPCS + PHPStan`, or `pnpm-first` front-end tooling.
 
 ## Verification
 
@@ -58,6 +61,7 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 - Added scripts execute successfully or fail only on genuine code issues.
 - Lint or format commands match the file types actually present in the repo.
 - The final summary explains why each tool was added.
+- A team member can run `composer install && vendor/bin/phpcs` (or the equivalent npm script) from a fresh checkout without additional configuration.
 
 ## Failure modes
 

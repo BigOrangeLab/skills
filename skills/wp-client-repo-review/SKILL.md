@@ -1,7 +1,11 @@
 ---
 name: wp-client-repo-review
 description: "Use when reviewing an existing WordPress client repository for security issues, WordPress best practices, and actionable findings after or alongside linting and standards checks."
-compatibility: "Claude Code and Claude desktop workflows using ~/.claude/skills"
+compatibility: "WordPress plugins, themes, mu-plugins, and site repos. Requires filesystem access to PHP source files; linting/standards output is optional input."
+license: MIT
+metadata:
+  author: georgestephanis
+  version: "1.0"
 ---
 
 # WordPress Client Repo Review
@@ -9,6 +13,8 @@ compatibility: "Claude Code and Claude desktop workflows using ~/.claude/skills"
 ## When to use
 
 Use this skill when a WordPress client repository needs a focused review for security, maintainability, and WordPress best-practice concerns instead of, or in addition to, tooling setup.
+
+Do NOT use as a substitute for running linting and standards tools — run those first and supply their output as input to this review. Do NOT use for repos where the primary ask is adding tooling; use `wp-client-repo-setup` for that.
 
 ## Inputs required
 
@@ -33,6 +39,8 @@ Use this skill when a WordPress client repository needs a focused review for sec
    - Deprecated APIs and compatibility issues
    - Performance issues caused by repeated queries, autoload bloat, or unbounded hooks
 
+   For detailed patterns and function-level examples in each category, see [references/security-checklist.md](references/security-checklist.md).
+
 3. Keep findings actionable.
    - Report concrete bugs, security issues, regressions, and missing tests before style commentary.
    - Prefer the smallest code reference set that supports the finding.
@@ -53,6 +61,7 @@ Use this skill when a WordPress client repository needs a focused review for sec
 - Security and behavior risks appear before style or polish observations.
 - Review conclusions align with actual code paths, not generic WordPress advice.
 - Residual testing or tooling gaps are called out explicitly when they limit confidence.
+- Client has a written summary distinguishing must-fix security issues from follow-up cleanup items.
 
 ## Failure modes
 
