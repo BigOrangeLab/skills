@@ -37,10 +37,12 @@ Optionally include a `references/` subdirectory for deeper documentation and a `
 
 ### Custom skills (`skills/`)
 
-| Skill | Description |
-|---|---|
-| [github-cli](skills/github-cli/) | Use the `gh` CLI to manage GitHub PRs, issues, repos, releases, and Actions from the terminal. Includes JSON/jq scripting patterns and `gh api` usage. |
-| [terminus-wp-cli](skills/terminus-wp-cli/) | Run WP-CLI commands on Pantheon environments via Terminus. Covers installation, authentication, environment targeting, common commands, and Pantheon-specific cache/session commands. |
+| Skill                                                  | Description                                                                                                                                                                           |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [github-cli](skills/github-cli/)                       | Use the `gh` CLI to manage GitHub PRs, issues, repos, releases, and Actions from the terminal. Includes JSON/jq scripting patterns and `gh api` usage.                                |
+| [terminus-wp-cli](skills/terminus-wp-cli/)             | Run WP-CLI commands on Pantheon environments via Terminus. Covers installation, authentication, environment targeting, common commands, and Pantheon-specific cache/session commands. |
+| [wp-client-repo-setup](skills/wp-client-repo-setup/)   | Adopt an existing WordPress client repo and add minimal Composer or NPM tooling for WPCS/PHPCS, PHP compatibility, and `@wordpress/scripts`.                                          |
+| [wp-client-repo-review](skills/wp-client-repo-review/) | Review an existing WordPress client repo for security issues, best-practice risks, and actionable follow-up after or alongside linting.                                               |
 
 ### WordPress skills (`vendor/wordpress/`)
 
@@ -61,7 +63,7 @@ node shared/scripts/skillpack-install.mjs --global --targets=claude
 node shared/scripts/skillpack-install.mjs --dest=../../your-project --targets=claude
 ```
 
-For custom skills in `skills/`, copy the skill directory into the target project's `.claude/skills/` directory.
+For custom skills in `skills/`, either copy the skill directory into a target project's `.claude/skills/` directory or symlink the individual skill directory into `~/.claude/skills/` for global availability across projects.
 
 ## Adding External Skill Collections
 

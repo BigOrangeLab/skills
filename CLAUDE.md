@@ -7,6 +7,11 @@ This repo collects AI agent skills for use across projects.
 - `skills/` — custom skills authored here; follow the SKILL.md format below
 - `vendor/wordpress/` — WordPress/agent-skills submodule (trunk branch)
 
+Current custom WordPress client-repo skills:
+
+- `wp-client-repo-setup` for adding or normalizing Composer and NPM tooling in existing repos
+- `wp-client-repo-review` for security and best-practice review passes on existing repos
+
 ## Skill file format
 
 Each skill is a directory containing `SKILL.md` with mandatory YAML frontmatter:
