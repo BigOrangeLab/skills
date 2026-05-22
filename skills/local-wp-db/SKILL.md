@@ -6,6 +6,10 @@ license: MIT
 metadata:
   author: georgestephanis
   version: "1.0"
+  written: "2026-05-22"
+  written_against:
+    local-by-wpengine: "6.x"
+    mysql: "8.0"
 ---
 
 # Local by WPEngine — Database Access

@@ -6,6 +6,12 @@ license: MIT
 metadata:
   author: georgestephanis
   version: "1.0"
+  written: "2026-05-22"
+  written_against:
+    wordpress: "6.9"
+    phpcs: "3.x"
+    wpcs: "3.x"
+    wordpress-scripts: "30.x"
 ---
 
 # WordPress Client Repo Setup
