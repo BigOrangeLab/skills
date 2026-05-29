@@ -103,7 +103,15 @@ ssh -i ~/.ssh/deploy_sitename -p <port> <user>@<host> "echo connected"
 
 Create `.github/workflows/drift-detection.yml`. This workflow is triggered manually and compares the current state of production against a chosen branch — surfacing files that were edited directly on the server that a deploy would overwrite.
 
-**Applies to rsync-based hosts only** (generic SSH). For other hosts: Kinsta uses a git-pull model so run `git status` on the server instead; Pantheon has `terminus env:diffstat <site>.<env>`; WP Engine has no direct rsync access; Pressable's SSH credentials can be used with this workflow independently of their native deployment integration (see [references/host-pressable.md](references/host-pressable.md)).
+**Host compatibility:**
+
+| Host | Drift detection approach |
+|------|--------------------------|
+| **Generic SSH** | This rsync workflow — full support |
+| **Kinsta** | Kinsta provides SSH access that rsync can theoretically use, but the IP allowlist is a common blocker — GitHub Actions runner IPs may be denied. If rsync is blocked, SSH into the server and run `git status` / `git diff` instead (requires the git-pull deployment model). See [references/host-kinsta.md](references/host-kinsta.md) for both options and their prerequisites. |
+| **Pressable** | Pressable SSH credentials work with this workflow even though deployment is native. See [references/host-pressable.md](references/host-pressable.md). |
+| **WP Engine** | No direct SSH rsync access. Check via WP Engine's SFTP or the admin file manager. |
+| **Pantheon** | Use `terminus env:diffstat <site>.<env>` to surface SFTP edits since the last commit. |
 
 The workflow reuses the same SSH secrets and variables as the rsync deploy workflow (`DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_PORT`, `DEPLOY_USER`, `DEPLOY_PATH`) — provision those before running it.
 
@@ -146,13 +154,20 @@ jobs:
       - name: Forward drift — files repo would change on production
         run: |
           echo "## Forward drift: what a deploy from \`${{ github.event.inputs.branch }}\` would change on production" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Legend: \`>f\` transfer file · \`*deleting\` remove from production · \`.f\` identical" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          rsync --dry-run --checksum --recursive --itemize-changes \
+          rsync \
+            --dry-run \
+            --checksum \
+            --recursive \
+            --itemize-changes \
             --no-perms --no-owner --no-group \
             --exclude-from=.deployignore \
             --exclude='.git' \
             ./ \
-            ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/ \
+            "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/" \
             2>&1 | tee forward_drift.txt
           cat forward_drift.txt >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -161,13 +176,21 @@ jobs:
 
       - name: Reverse drift — files on production not in repo branch
         run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "## Reverse drift: files on production not tracked in \`${{ github.event.inputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "These files exist on production but are absent from the repo. May indicate cowboy additions." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          rsync --dry-run --checksum --recursive --itemize-changes \
+          rsync \
+            --dry-run \
+            --checksum \
+            --recursive \
+            --itemize-changes \
             --no-perms --no-owner --no-group \
             --exclude-from=.deployignore \
             --exclude='.git' \
-            ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/ \
+            "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/" \
             ./ \
             2>&1 | grep '^>f' | tee reverse_drift.txt
           cat reverse_drift.txt >> "$GITHUB_STEP_SUMMARY"
@@ -201,8 +224,10 @@ jobs:
 
           FORWARD_BODY=$(head -100 forward_drift.txt)
           REVERSE_BODY=$(head -100 reverse_drift.txt)
-          [ "$(wc -l < forward_drift.txt)" -gt 100 ] && FORWARD_NOTE="*(truncated — see run for full output)*" || FORWARD_NOTE=""
-          [ "$(wc -l < reverse_drift.txt)" -gt 100 ] && REVERSE_NOTE="*(truncated — see run for full output)*" || REVERSE_NOTE=""
+          FORWARD_LINES=$(wc -l < forward_drift.txt)
+          REVERSE_LINES=$(wc -l < reverse_drift.txt)
+          [ "$FORWARD_LINES" -gt 100 ] && FORWARD_NOTE="*(truncated — $FORWARD_LINES lines total; see run for full output)*" || FORWARD_NOTE=""
+          [ "$REVERSE_LINES" -gt 100 ] && REVERSE_NOTE="*(truncated — $REVERSE_LINES lines total; see run for full output)*" || REVERSE_NOTE=""
 
           cat > /tmp/drift_body.md << BODY
           **Branch compared:** \`${BRANCH}\`
