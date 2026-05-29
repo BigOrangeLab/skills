@@ -1,7 +1,7 @@
 ---
 name: wp-integrity-check
 description: "Use when auditing a WordPress site's plugins, themes, and core for unexpected modifications. Verifies wordpress.org-hosted code against the official checksums API, compares GitHub-hosted open-source plugins against upstream tags, and generates reference checksum snapshots for premium and unknown-source plugins so future changes can be detected."
-compatibility: "WordPress sites with SSH access and WP-CLI available on the server. Local git checkout assumed. Requires curl and sha256sum (standard on Linux runners and macOS)."
+compatibility: "WordPress sites with SSH access and WP-CLI available on the server. Local git checkout assumed. Requires curl and sha256sum (Linux/CI runners) or shasum -a 256 (macOS built-in — not the same command)."
 license: MIT
 metadata:
     author: georgestephanis
@@ -89,7 +89,7 @@ wp --path=<wp-path> plugin verify-checksums --all --format=json 2>&1
 
 #### Fallback: checksums API directly
 
-If WP-CLI is unavailable, query the API directly for a specific plugin:
+If WP-CLI is unavailable, query the API directly for a specific plugin. This fallback assumes the plugin directory is available **locally** (i.e. already checked out in the repo — run from the repo root):
 
 ```bash
 SLUG=classic-editor
@@ -98,8 +98,7 @@ curl -s "https://downloads.wordpress.org/plugin-checksums/${SLUG}/${VERSION}.jso
   | jq -r '.files | to_entries[] | "\(.value.md5)  \(.key)"' \
   > /tmp/expected.md5
 
-# Then on the server, or locally against the plugin directory:
-(cd wp-content/plugins/$SLUG && md5sum $(cat /tmp/expected.md5 | awk '{print $2}')) \
+(cd wp-content/plugins/$SLUG && md5sum $(awk '{print $2}' /tmp/expected.md5)) \
   | diff /tmp/expected.md5 -
 ```
 
@@ -158,6 +157,7 @@ curl -sL "https://github.com/${REPO}/archive/refs/tags/${VERSION}.tar.gz" \
 diff -rq \
   "/tmp/photonfill-${VERSION}/" \
   "wp-content/plugins/${SLUG}/" \
+  --exclude='.git' \
   --exclude="*.DS_Store"
 ```
 
@@ -165,7 +165,7 @@ If no versioned tag exists (common for `-master` snapshots), compare against `HE
 
 ```bash
 git clone --depth=1 "https://github.com/${REPO}.git" /tmp/plugin-ref
-diff -rq /tmp/plugin-ref/ wp-content/plugins/${SLUG}/
+diff -rq --exclude='.git' /tmp/plugin-ref/ wp-content/plugins/${SLUG}/
 ```
 
 Differences found this way may be:
@@ -181,6 +181,7 @@ For any plugin or theme you cannot verify against an upstream source, generate a
 SLUG=advanced-custom-fields-pro
 VERSION=6.8.2   # read from plugin header
 
+# Run from the repo root so paths resolve correctly
 find "wp-content/plugins/${SLUG}" -type f | sort | \
   xargs sha256sum | \
   sed "s|wp-content/plugins/${SLUG}/||" \
@@ -195,7 +196,7 @@ Store all checksum files under `checksums/` at the git root. Add `checksums/` to
 SLUG=advanced-custom-fields-pro
 VERSION=6.8.2
 
-# Regenerate and compare
+# Run from the repo root so paths resolve correctly
 find "wp-content/plugins/${SLUG}" -type f | sort | \
   xargs sha256sum | \
   sed "s|wp-content/plugins/${SLUG}/||" \
@@ -213,7 +214,7 @@ Update PLUGINS.md with the verification outcome for each plugin. A simple additi
 ```markdown
 ## Verification Log
 
-Last run: 2026-05-29
+Last run: <YYYY-MM-DD>
 
 | Slug | Tier | Outcome | Notes |
 |------|------|---------|-------|
@@ -237,14 +238,17 @@ Add a WP-CLI checksum step to the drift-detection workflow (see `wp-github-deplo
 
 ```yaml
 - name: Verify plugin/theme checksums on production
+  continue-on-error: true
   run: |
     ssh -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} \
-      "wp --path=${{ vars.WP_PATH }} plugin verify-checksums --all && \
-       wp --path=${{ vars.WP_PATH }} theme verify-checksums --all && \
+      "wp --path=${{ vars.WP_PATH }} plugin verify-checksums --all ; \
+       wp --path=${{ vars.WP_PATH }} theme verify-checksums --all ; \
        wp --path=${{ vars.WP_PATH }} core verify-checksums"
 ```
 
-A checksum failure in CI is informational, not a deploy blocker — it should trigger a human review, not an automated halt. Use `continue-on-error: true` and write the result to `$GITHUB_STEP_SUMMARY` so it is visible in the run summary alongside the rsync drift output.
+Use `;` not `&&` between commands — if one check finds issues and exits non-zero, `&&` would silently skip the remaining checks. `continue-on-error: true` keeps the overall workflow green so this step is informational, not a deploy blocker.
+
+**Note**: this step applies to rsync-based hosts only (generic SSH). It reuses the same `DEPLOY_PORT`, `DEPLOY_USER`, `DEPLOY_HOST` variables as the rsync deploy workflow. Add `WP_PATH` as a separate variable pointing to the WordPress root on the server (one level above `wp-content/`) — it is not provisioned by `wp-github-deploy` by default.
 
 #### Admin UI alternative
 
