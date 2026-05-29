@@ -8,6 +8,7 @@ A shared repository of AI agent skills for use across projects. Skills teach AI 
 skills/         — Custom skills authored here
 vendor/         — External skill collections (git submodules)
   wordpress/    — https://github.com/WordPress/agent-skills
+  jdevalk/      — https://github.com/jdevalk/skills
 ```
 
 ## Skill Format
@@ -76,6 +77,10 @@ flowchart LR
 ### WordPress skills (`vendor/wordpress/`)
 
 Upstream skills from [WordPress/agent-skills](https://github.com/WordPress/agent-skills). See that repo's README for the full list.
+
+### jdevalk skills (`vendor/jdevalk/`)
+
+Skills from [jdevalk/skills](https://github.com/jdevalk/skills). Covers GitHub presence auditing, WordPress/Astro/EmDash CI/CD, WordPress.org plugin page optimisation, static-site SEO, readability checking, and static WordPress cloning. See that repo's README for the full list.
 
 ---
 

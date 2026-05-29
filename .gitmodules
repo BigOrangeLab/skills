@@ -2,3 +2,7 @@
 	path = vendor/wordpress
 	url = https://github.com/WordPress/agent-skills.git
 	branch = trunk
+[submodule "vendor/jdevalk"]
+	path = vendor/jdevalk
+	url = https://github.com/jdevalk/skills.git
+	branch = main
