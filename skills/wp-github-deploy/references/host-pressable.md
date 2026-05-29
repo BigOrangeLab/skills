@@ -4,7 +4,7 @@ Pressable has a **native GitHub integration** managed entirely through their con
 
 ## Setup
 
-1. **Commit `.deployignore` to the repo first** — it must exist in the repository *before* you activate the integration, or files that should be excluded will be deleted from the server on first sync.
+1. **Commit `.deployignore` to the repo first** — it must exist in the repository _before_ you activate the integration, or files that should be excluded will be deleted from the server on first sync.
 
 2. In the Pressable control panel, go to **My Sites → [site] → Advanced → GitHub Integration**.
 
@@ -13,8 +13,8 @@ Pressable has a **native GitHub integration** managed entirely through their con
 4. Choose the deployment branch (`trunk`, `main`, `master`, etc.).
 
 5. Configure the deployment paths:
-   - **Repository Subdirectory** — the folder inside the repo to deploy *from* (e.g. `wp-content/` for a wp-content-rooted repo, or leave blank for the repo root).
-   - **Destination Path** — where on the server to deploy *to*, relative to `/htdocs` (e.g. `wp-content/` or leave blank for the site root).
+    - **Repository Subdirectory** — the folder inside the repo to deploy _from_ (e.g. `wp-content/` for a wp-content-rooted repo, or leave blank for the repo root).
+    - **Destination Path** — where on the server to deploy _to_, relative to `/htdocs` (e.g. `wp-content/` or leave blank for the site root).
 
 6. Create a site backup before proceeding.
 

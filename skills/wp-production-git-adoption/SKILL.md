@@ -123,6 +123,7 @@ git add .
 ```
 
 At this point `git status` shows the real divergences:
+
 - **`deleted:`** — files in the remote but not on disk (often dev-only tooling never deployed to production)
 - **`modified:`** — files changed on production since the last commit
 - **`new file:`** — files on disk not yet in the repo
@@ -165,6 +166,7 @@ Create `PLUGINS.md` at the git root (whether that is `wp-content/` or the WordPr
 #### Annotate sources and licenses
 
 For each plugin, fill in:
+
 - **In Repo** — `✓` if the plugin is tracked in this repository, blank otherwise.
 - **Source** — where the plugin comes from: `wordpress.org`, the vendor's site (e.g. `gravityforms.com`), or `first-party` for in-house code.
 - **License** — for premium plugins: who holds the license and the billing cycle. For free plugins: `Free`. For first-party: `—`.
@@ -188,7 +190,7 @@ Use `git status` and `git diff` to understand what changed on production. Group 
 
 #### Distinguish production edits from undeployed repo commits
 
-Before staging modified files, check whether the production version of a file matches an *older* commit — meaning the repo advanced but production was never updated:
+Before staging modified files, check whether the production version of a file matches an _older_ commit — meaning the repo advanced but production was never updated:
 
 ```bash
 # Review commit history for a specific file
@@ -250,7 +252,7 @@ Common things to check:
 
 Commit doc-only updates as a separate commit with a clear message:
 
-```
+```bash
 git add AGENTS.md .github/copilot-instructions.md README.md
 git commit -m "Update docs to reflect current production state."
 ```
@@ -299,8 +301,8 @@ If deployment workflows exist:
 
 - **If ready to deploy from GitHub** — review the workflow file to confirm it targets the right environment and branch, then proceed to push. Update any host-specific secrets (SSH keys, deploy tokens) in the GitHub repo's Settings → Secrets if not already present.
 - **If NOT ready to deploy yet** — temporarily disable the workflow before pushing:
-  - Via GitHub UI: Settings → Actions → disable the specific workflow, or rename the workflow file to `*.yml.disabled` in a commit.
-  - Via `gh`: `gh workflow disable <workflow-name>` — see the `github-cli` skill ([references/actions.md](../github-cli/references/actions.md)) for full `gh workflow` usage.
+    - Via GitHub UI: Settings → Actions → disable the specific workflow, or rename the workflow file to `*.yml.disabled` in a commit.
+    - Via `gh`: `gh workflow disable <workflow-name>` — see the `github-cli` skill ([references/actions.md](../github-cli/references/actions.md)) for full `gh workflow` usage.
 
 If no deployment workflow exists yet, this is the time to plan one. Use the `wp-github-deploy` skill for host-specific deployment workflow setup and a drift-detection workflow that surfaces files changed directly on production before a deploy overwrites them.
 

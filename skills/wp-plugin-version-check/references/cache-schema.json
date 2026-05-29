@@ -1,178 +1,185 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wp-plugin-version-check/cache-schema.json",
-  "title": "Plugin Version Cache",
-  "description": "Schema for .github/plugin-versions-cache.json — the machine-readable plugin inventory maintained by the plugin-version-check workflow.",
-  "type": "object",
-  "required": ["_meta", "plugins"],
-  "additionalProperties": false,
-  "properties": {
-    "_meta": {
-      "type": "object",
-      "required": ["generated", "description"],
-      "additionalProperties": true,
-      "properties": {
-        "generated": {
-          "type": "string",
-          "format": "date",
-          "description": "ISO date (YYYY-MM-DD) the file was last written by the workflow."
-        },
-        "description": { "type": "string" },
-        "note": { "type": "string" },
-        "source_types": {
-          "type": "object",
-          "description": "Human-readable legend for source_type values.",
-          "additionalProperties": { "type": "string" }
-        }
-      }
-    },
-    "plugins": {
-      "type": "object",
-      "description": "Keyed by WP-CLI plugin slug (directory name under wp-content/plugins/).",
-      "additionalProperties": { "$ref": "#/$defs/plugin" }
-    }
-  },
-  "$defs": {
-    "plugin": {
-      "type": "object",
-      "required": ["title", "status", "source_type", "installed_version", "latest_version", "latest_checked"],
-      "additionalProperties": false,
-      "properties": {
-        "title": {
-          "type": "string",
-          "description": "Human-readable plugin name."
-        },
-        "status": {
-          "enum": ["active", "inactive", "must-use"],
-          "description": "Last known status on production, as reported by WP-CLI."
-        },
-        "source_type": {
-          "enum": ["wporg", "github", "premium", "saas"],
-          "description": "Determines how (and whether) the workflow can auto-check for a newer version."
-        },
-        "installed_version": {
-          "type": ["string", "null"],
-          "description": "Version currently installed on production. Null if the plugin was not found in the last WP-CLI scan."
-        },
-        "latest_version": {
-          "type": ["string", "null"],
-          "description": "Latest version known from the upstream source. Null for premium/saas plugins with no queryable API, or before the first successful check."
-        },
-        "latest_checked": {
-          "type": ["string", "null"],
-          "format": "date",
-          "description": "ISO date of the last successful upstream version check. Null if never checked."
-        },
-        "github_repo": {
-          "type": ["string", "null"],
-          "pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$",
-          "description": "GitHub repo in owner/repo format. Required when source_type is github; null if the repo URL is unknown."
-        },
-        "github_repo_note": {
-          "type": "string",
-          "description": "Free-text note explaining why github_repo is null or how to find the correct repo."
-        },
-        "github_tag_strip": {
-          "type": "string",
-          "description": "String prefix to strip from the GitHub tag before treating it as a version. Defaults to 'v' if absent. Use when repos tag as 'plugin-name-1.2.3' instead of 'v1.2.3' or '1.2.3'."
-        },
-        "vendor_url": {
-          "type": "string",
-          "description": "Vendor domain (e.g. gravityforms.com). Informational; used for premium and saas entries."
-        },
-        "vendor_url_note": {
-          "type": "string"
-        },
-        "update_api": { "$ref": "#/$defs/update_api" }
-      },
-      "if": {
-        "properties": { "source_type": { "const": "github" } },
-        "required": ["source_type"]
-      },
-      "then": {
-        "required": ["github_repo"]
-      }
-    },
-    "update_api": {
-      "type": "object",
-      "description": "Vendor update API configuration. Present only for premium/saas plugins where the update endpoint is known.",
-      "required": ["type", "endpoint", "version_field"],
-      "properties": {
-        "type": {
-          "enum": ["edd", "acf_rest", "tgm"],
-          "description": "edd: EDD Software Licensing (?edd_action=get_version). acf_rest: ACF custom REST endpoint with X-ACF-License header. tgm: TGM-style key/plugin-param API."
-        },
-        "endpoint": {
-          "type": "string",
-          "format": "uri",
-          "description": "Full URL of the update API endpoint."
-        },
-        "version_field": {
-          "type": "string",
-          "description": "JSON key in the API response that contains the version string (e.g. new_version, version)."
-        },
-        "license_secret": {
-          "type": "string",
-          "description": "Name of the GitHub Actions secret containing the license key. If absent or unset, the workflow tries unauthenticated first."
-        },
-        "auth_note": {
-          "type": "string",
-          "description": "Human note about authentication requirements (e.g. whether unauthenticated calls are known to work)."
-        },
-        "item_name": {
-          "type": "string",
-          "description": "EDD item name as registered in the vendor's store. Required for type=edd."
-        },
-        "item_name_note": {
-          "type": "string",
-          "description": "Note about how to verify the item_name if the API returns item_not_found."
-        },
-        "params": {
-          "type": "object",
-          "description": "Additional query parameters to append to the endpoint URL (used by acf_rest).",
-          "additionalProperties": { "type": "string" }
-        },
-        "license_header": {
-          "type": "string",
-          "description": "HTTP header name for the license key (used by acf_rest, e.g. X-ACF-License)."
-        },
-        "action": {
-          "type": "string",
-          "description": "Action name for TGM-style APIs (e.g. get-plugin-update)."
-        },
-        "action_param": {
-          "type": "string",
-          "description": "Query parameter name for the action (default: action)."
-        },
-        "plugin_slug": {
-          "type": "string",
-          "description": "Plugin slug value passed in the plugin_param for TGM-style APIs."
-        },
-        "plugin_param": {
-          "type": "string",
-          "description": "Query parameter name for the plugin slug (default: tgm-updater-plugin)."
-        },
-        "key_param": {
-          "type": "string",
-          "description": "Query parameter name for the license key in TGM-style APIs (default: tgm-updater-key)."
-        }
-      },
-      "if": {
-        "properties": { "type": { "const": "edd" } },
-        "required": ["type"]
-      },
-      "then": {
-        "required": ["item_name"]
-      },
-      "else": {
-        "if": {
-          "properties": { "type": { "const": "tgm" } },
-          "required": ["type"]
-        },
-        "then": {
-          "required": ["action", "plugin_slug"]
-        }
-      }
-    }
-  }
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "wp-plugin-version-check/cache-schema.json",
+	"title": "Plugin Version Cache",
+	"description": "Schema for .github/plugin-versions-cache.json — the machine-readable plugin inventory maintained by the plugin-version-check workflow.",
+	"type": "object",
+	"required": ["_meta", "plugins"],
+	"additionalProperties": false,
+	"properties": {
+		"_meta": {
+			"type": "object",
+			"required": ["generated", "description"],
+			"additionalProperties": true,
+			"properties": {
+				"generated": {
+					"type": "string",
+					"format": "date",
+					"description": "ISO date (YYYY-MM-DD) the file was last written by the workflow."
+				},
+				"description": { "type": "string" },
+				"note": { "type": "string" },
+				"source_types": {
+					"type": "object",
+					"description": "Human-readable legend for source_type values.",
+					"additionalProperties": { "type": "string" }
+				}
+			}
+		},
+		"plugins": {
+			"type": "object",
+			"description": "Keyed by WP-CLI plugin slug (directory name under wp-content/plugins/).",
+			"additionalProperties": { "$ref": "#/$defs/plugin" }
+		}
+	},
+	"$defs": {
+		"plugin": {
+			"type": "object",
+			"required": [
+				"title",
+				"status",
+				"source_type",
+				"installed_version",
+				"latest_version",
+				"latest_checked"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"title": {
+					"type": "string",
+					"description": "Human-readable plugin name."
+				},
+				"status": {
+					"enum": ["active", "inactive", "must-use"],
+					"description": "Last known status on production, as reported by WP-CLI."
+				},
+				"source_type": {
+					"enum": ["wporg", "github", "premium", "saas"],
+					"description": "Determines how (and whether) the workflow can auto-check for a newer version."
+				},
+				"installed_version": {
+					"type": ["string", "null"],
+					"description": "Version currently installed on production. Null if the plugin was not found in the last WP-CLI scan."
+				},
+				"latest_version": {
+					"type": ["string", "null"],
+					"description": "Latest version known from the upstream source. Null for premium/saas plugins with no queryable API, or before the first successful check."
+				},
+				"latest_checked": {
+					"type": ["string", "null"],
+					"format": "date",
+					"description": "ISO date of the last successful upstream version check. Null if never checked."
+				},
+				"github_repo": {
+					"type": ["string", "null"],
+					"pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$",
+					"description": "GitHub repo in owner/repo format. Required when source_type is github; null if the repo URL is unknown."
+				},
+				"github_repo_note": {
+					"type": "string",
+					"description": "Free-text note explaining why github_repo is null or how to find the correct repo."
+				},
+				"github_tag_strip": {
+					"type": "string",
+					"description": "String prefix to strip from the GitHub tag before treating it as a version. Defaults to 'v' if absent. Use when repos tag as 'plugin-name-1.2.3' instead of 'v1.2.3' or '1.2.3'."
+				},
+				"vendor_url": {
+					"type": "string",
+					"description": "Vendor domain (e.g. gravityforms.com). Informational; used for premium and saas entries."
+				},
+				"vendor_url_note": {
+					"type": "string"
+				},
+				"update_api": { "$ref": "#/$defs/update_api" }
+			},
+			"if": {
+				"properties": { "source_type": { "const": "github" } },
+				"required": ["source_type"]
+			},
+			"then": {
+				"required": ["github_repo"]
+			}
+		},
+		"update_api": {
+			"type": "object",
+			"description": "Vendor update API configuration. Present only for premium/saas plugins where the update endpoint is known.",
+			"required": ["type", "endpoint", "version_field"],
+			"properties": {
+				"type": {
+					"enum": ["edd", "acf_rest", "tgm"],
+					"description": "edd: EDD Software Licensing (?edd_action=get_version). acf_rest: ACF custom REST endpoint with X-ACF-License header. tgm: TGM-style key/plugin-param API."
+				},
+				"endpoint": {
+					"type": "string",
+					"format": "uri",
+					"description": "Full URL of the update API endpoint."
+				},
+				"version_field": {
+					"type": "string",
+					"description": "JSON key in the API response that contains the version string (e.g. new_version, version)."
+				},
+				"license_secret": {
+					"type": "string",
+					"description": "Name of the GitHub Actions secret containing the license key. If absent or unset, the workflow tries unauthenticated first."
+				},
+				"auth_note": {
+					"type": "string",
+					"description": "Human note about authentication requirements (e.g. whether unauthenticated calls are known to work)."
+				},
+				"item_name": {
+					"type": "string",
+					"description": "EDD item name as registered in the vendor's store. Required for type=edd."
+				},
+				"item_name_note": {
+					"type": "string",
+					"description": "Note about how to verify the item_name if the API returns item_not_found."
+				},
+				"params": {
+					"type": "object",
+					"description": "Additional query parameters to append to the endpoint URL (used by acf_rest).",
+					"additionalProperties": { "type": "string" }
+				},
+				"license_header": {
+					"type": "string",
+					"description": "HTTP header name for the license key (used by acf_rest, e.g. X-ACF-License)."
+				},
+				"action": {
+					"type": "string",
+					"description": "Action name for TGM-style APIs (e.g. get-plugin-update)."
+				},
+				"action_param": {
+					"type": "string",
+					"description": "Query parameter name for the action (default: action)."
+				},
+				"plugin_slug": {
+					"type": "string",
+					"description": "Plugin slug value passed in the plugin_param for TGM-style APIs."
+				},
+				"plugin_param": {
+					"type": "string",
+					"description": "Query parameter name for the plugin slug (default: tgm-updater-plugin)."
+				},
+				"key_param": {
+					"type": "string",
+					"description": "Query parameter name for the license key in TGM-style APIs (default: tgm-updater-key)."
+				}
+			},
+			"if": {
+				"properties": { "type": { "const": "edd" } },
+				"required": ["type"]
+			},
+			"then": {
+				"required": ["item_name"]
+			},
+			"else": {
+				"if": {
+					"properties": { "type": { "const": "tgm" } },
+					"required": ["type"]
+				},
+				"then": {
+					"required": ["action", "plugin_slug"]
+				}
+			}
+		}
+	}
 }

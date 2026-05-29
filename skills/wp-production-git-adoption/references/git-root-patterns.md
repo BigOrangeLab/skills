@@ -2,10 +2,10 @@
 
 Two patterns exist for where the git root lives relative to a WordPress installation.
 
-| Pattern | Indicator | `git init` location |
-|---------|-----------|---------------------|
-| **wp-content-rooted** | `plugins/`, `themes/`, `mu-plugins/` at root; `.gitignore` references `uploads/*` | Inside `wp-content/` |
-| **WordPress-root** | `wp-content/` directory present in tree; `.gitignore` references `wp-content/uploads/*` | At the WordPress installation root |
+| Pattern               | Indicator                                                                               | `git init` location                |
+| --------------------- | --------------------------------------------------------------------------------------- | ---------------------------------- |
+| **wp-content-rooted** | `plugins/`, `themes/`, `mu-plugins/` at root; `.gitignore` references `uploads/*`       | Inside `wp-content/`               |
+| **WordPress-root**    | `wp-content/` directory present in tree; `.gitignore` references `wp-content/uploads/*` | At the WordPress installation root |
 
 ## Detection commands
 

@@ -25,7 +25,7 @@ db.php
 
 Files that belong in the repo but must not be deployed to production. Create `.deployignore` at the git root if it does not already exist:
 
-```
+```text
 ## Files
 AGENTS.md
 LICENSE

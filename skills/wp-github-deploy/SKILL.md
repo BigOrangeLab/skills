@@ -41,13 +41,13 @@ Do NOT use this skill to set up the repo itself — use `wp-production-git-adopt
 
 Confirm the hosting provider and their preferred deployment method before writing any workflow YAML. The wrong pattern will either not work or require secrets the host does not support.
 
-| Host | Preferred pattern | Notes |
-|------|-------------------|-------|
-| **Kinsta** | Server-side git pull (`appleboy/ssh-action`) | CI SSHs in and runs `git fetch && git reset --hard`. Server needs a deploy key on GitHub. IP allowlist must be disabled. |
-| **WP Engine** | Official GitHub Action (`wpengine/github-action-wpe-site-deploy`) | Uses WP Engine's SSH Git Push feature. Simplest setup. |
-| **Pantheon** | `push-to-pantheon` action (recommended) or manual Terminus | Git-push model; handles Multidev for PRs + Dev for branch pushes. Use the `terminus-wp-cli` skill for context. |
-| **Pressable** | Native GitHub integration (no workflow YAML) | Configured entirely in the Pressable control panel. `.deployignore` must exist in the repo *before* activating. |
-| **Generic SSH** | rsync over SSH | Works for any host with SSH access and a known deploy path. |
+| Host            | Preferred pattern                                                 | Notes                                                                                                                    |
+| --------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Kinsta**      | Server-side git pull (`appleboy/ssh-action`)                      | CI SSHs in and runs `git fetch && git reset --hard`. Server needs a deploy key on GitHub. IP allowlist must be disabled. |
+| **WP Engine**   | Official GitHub Action (`wpengine/github-action-wpe-site-deploy`) | Uses WP Engine's SSH Git Push feature. Simplest setup.                                                                   |
+| **Pantheon**    | `push-to-pantheon` action (recommended) or manual Terminus        | Git-push model; handles Multidev for PRs + Dev for branch pushes. Use the `terminus-wp-cli` skill for context.           |
+| **Pressable**   | Native GitHub integration (no workflow YAML)                      | Configured entirely in the Pressable control panel. `.deployignore` must exist in the repo _before_ activating.          |
+| **Generic SSH** | rsync over SSH                                                    | Works for any host with SSH access and a known deploy path.                                                              |
 
 Ask the user to confirm the host if it is not already documented in AGENTS.md or a README.
 
@@ -55,12 +55,12 @@ Ask the user to confirm the host if it is not already documented in AGENTS.md or
 
 Open the reference for the detected host, copy the workflow YAML into `.github/workflows/deploy.yml` (or a host-specific name), and note the required secrets and variables — you'll provision them in Phase 3.
 
-| Host | Reference |
-|------|-----------|
-| Kinsta | [references/host-kinsta.md](references/host-kinsta.md) |
-| WP Engine | [references/host-wp-engine.md](references/host-wp-engine.md) |
-| Pantheon | [references/host-pantheon.md](references/host-pantheon.md) |
-| Pressable | [references/host-pressable.md](references/host-pressable.md) |
+| Host        | Reference                                                        |
+| ----------- | ---------------------------------------------------------------- |
+| Kinsta      | [references/host-kinsta.md](references/host-kinsta.md)           |
+| WP Engine   | [references/host-wp-engine.md](references/host-wp-engine.md)     |
+| Pantheon    | [references/host-pantheon.md](references/host-pantheon.md)       |
+| Pressable   | [references/host-pressable.md](references/host-pressable.md)     |
 | Generic SSH | [references/host-generic-ssh.md](references/host-generic-ssh.md) |
 
 Each reference includes the full workflow YAML, required secrets/variables table, and host-specific notes. To add a new host, create `references/host-<name>.md` following the same structure and add a row to this table.
@@ -105,182 +105,182 @@ Create `.github/workflows/drift-detection.yml`. This workflow is triggered manua
 
 **Host compatibility:**
 
-| Host | Drift detection approach |
-|------|--------------------------|
-| **Generic SSH** | This rsync workflow — full support |
-| **Kinsta** | Kinsta provides SSH access that rsync can theoretically use, but the IP allowlist is a common blocker — GitHub Actions runner IPs may be denied. If rsync is blocked, SSH into the server and run `git status` / `git diff` instead (requires the git-pull deployment model). See [references/host-kinsta.md](references/host-kinsta.md) for both options and their prerequisites. |
-| **Pressable** | Pressable SSH credentials work with this workflow even though deployment is native. See [references/host-pressable.md](references/host-pressable.md). |
-| **WP Engine** | No direct SSH rsync access. Check via WP Engine's SFTP or the admin file manager. |
-| **Pantheon** | Use `terminus env:diffstat <site>.<env>` to surface SFTP edits since the last commit. |
+| Host            | Drift detection approach                                                                                                                                                                                                                                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Generic SSH** | This rsync workflow — full support                                                                                                                                                                                                                                                                                                                                                 |
+| **Kinsta**      | Kinsta provides SSH access that rsync can theoretically use, but the IP allowlist is a common blocker — GitHub Actions runner IPs may be denied. If rsync is blocked, SSH into the server and run `git status` / `git diff` instead (requires the git-pull deployment model). See [references/host-kinsta.md](references/host-kinsta.md) for both options and their prerequisites. |
+| **Pressable**   | Pressable SSH credentials work with this workflow even though deployment is native. See [references/host-pressable.md](references/host-pressable.md).                                                                                                                                                                                                                              |
+| **WP Engine**   | No direct SSH rsync access. Check via WP Engine's SFTP or the admin file manager.                                                                                                                                                                                                                                                                                                  |
+| **Pantheon**    | Use `terminus env:diffstat <site>.<env>` to surface SFTP edits since the last commit.                                                                                                                                                                                                                                                                                              |
 
 The workflow reuses the same SSH secrets and variables as the rsync deploy workflow (`DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_PORT`, `DEPLOY_USER`, `DEPLOY_PATH`) — provision those before running it.
 
 Note: `--checksum` compares files by content, not timestamps. This is accurate but slow on large plugin directories; on a typical production site the drift step may take several minutes.
 
-```yaml
+````yaml
 name: Production Drift Detection
 
 # When drift is found, creates a GitHub issue (or comments on an existing open
 # drift issue) so it is tracked and not forgotten. Close the issue once resolved.
 
 on:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to compare against production'
-        required: true
-        default: 'trunk'
+    workflow_dispatch:
+        inputs:
+            branch:
+                description: "Branch to compare against production"
+                required: true
+                default: "trunk"
 
 permissions:
-  contents: read
-  issues: write
+    contents: read
+    issues: write
 
 jobs:
-  detect-drift:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.branch }}
+    detect-drift:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.branch }}
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+            - name: Set up SSH
+              uses: webfactory/ssh-agent@v0.9.0
+              with:
+                  ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: Add host to known_hosts
-        run: ssh-keyscan -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+            - name: Add host to known_hosts
+              run: ssh-keyscan -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Forward drift — files repo would change on production
-        run: |
-          echo "## Forward drift: what a deploy from \`${{ github.event.inputs.branch }}\` would change on production" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Legend: \`>f\` transfer file · \`*deleting\` remove from production · \`.f\` identical" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          rsync \
-            --dry-run \
-            --checksum \
-            --recursive \
-            --itemize-changes \
-            --no-perms --no-owner --no-group \
-            --exclude-from=.deployignore \
-            --exclude='.git' \
-            ./ \
-            "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/" \
-            2>&1 | tee forward_drift.txt
-          cat forward_drift.txt >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-        env:
-          RSYNC_RSH: "ssh -p ${{ vars.DEPLOY_PORT }}"
+            - name: Forward drift — files repo would change on production
+              run: |
+                  echo "## Forward drift: what a deploy from \`${{ github.event.inputs.branch }}\` would change on production" >> "$GITHUB_STEP_SUMMARY"
+                  echo "" >> "$GITHUB_STEP_SUMMARY"
+                  echo "Legend: \`>f\` transfer file · \`*deleting\` remove from production · \`.f\` identical" >> "$GITHUB_STEP_SUMMARY"
+                  echo "" >> "$GITHUB_STEP_SUMMARY"
+                  echo '```' >> "$GITHUB_STEP_SUMMARY"
+                  rsync \
+                    --dry-run \
+                    --checksum \
+                    --recursive \
+                    --itemize-changes \
+                    --no-perms --no-owner --no-group \
+                    --exclude-from=.deployignore \
+                    --exclude='.git' \
+                    ./ \
+                    "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/" \
+                    2>&1 | tee forward_drift.txt
+                  cat forward_drift.txt >> "$GITHUB_STEP_SUMMARY"
+                  echo '```' >> "$GITHUB_STEP_SUMMARY"
+              env:
+                  RSYNC_RSH: "ssh -p ${{ vars.DEPLOY_PORT }}"
 
-      - name: Reverse drift — files on production not in repo branch
-        run: |
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "## Reverse drift: files on production not tracked in \`${{ github.event.inputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "These files exist on production but are absent from the repo. May indicate cowboy additions." >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          rsync \
-            --dry-run \
-            --checksum \
-            --recursive \
-            --itemize-changes \
-            --no-perms --no-owner --no-group \
-            --exclude-from=.deployignore \
-            --exclude='.git' \
-            "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/" \
-            ./ \
-            2>&1 | grep '^>f' | tee reverse_drift.txt
-          cat reverse_drift.txt >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-        env:
-          RSYNC_RSH: "ssh -p ${{ vars.DEPLOY_PORT }}"
+            - name: Reverse drift — files on production not in repo branch
+              run: |
+                  echo "" >> "$GITHUB_STEP_SUMMARY"
+                  echo "## Reverse drift: files on production not tracked in \`${{ github.event.inputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+                  echo "" >> "$GITHUB_STEP_SUMMARY"
+                  echo "These files exist on production but are absent from the repo. May indicate cowboy additions." >> "$GITHUB_STEP_SUMMARY"
+                  echo "" >> "$GITHUB_STEP_SUMMARY"
+                  echo '```' >> "$GITHUB_STEP_SUMMARY"
+                  rsync \
+                    --dry-run \
+                    --checksum \
+                    --recursive \
+                    --itemize-changes \
+                    --no-perms --no-owner --no-group \
+                    --exclude-from=.deployignore \
+                    --exclude='.git' \
+                    "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/" \
+                    ./ \
+                    2>&1 | grep '^>f' | tee reverse_drift.txt
+                  cat reverse_drift.txt >> "$GITHUB_STEP_SUMMARY"
+                  echo '```' >> "$GITHUB_STEP_SUMMARY"
+              env:
+                  RSYNC_RSH: "ssh -p ${{ vars.DEPLOY_PORT }}"
 
-      - name: Summary counts
-        id: counts
-        run: |
-          FORWARD=$(grep -c '^[>c<]' forward_drift.txt || true)
-          REVERSE=$(wc -l < reverse_drift.txt)
-          echo "forward=$FORWARD" >> "$GITHUB_OUTPUT"
-          echo "reverse=$REVERSE" >> "$GITHUB_OUTPUT"
-          echo "**Forward drift** (production differs from repo): $FORWARD file(s)" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Reverse drift** (on production, absent from repo): $REVERSE file(s)" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$FORWARD" -gt 0 ] || [ "$REVERSE" -gt 0 ]; then
-            echo "::warning::Drift detected — review the job summary before deploying to production."
-          fi
+            - name: Summary counts
+              id: counts
+              run: |
+                  FORWARD=$(grep -c '^[>c<]' forward_drift.txt || true)
+                  REVERSE=$(wc -l < reverse_drift.txt)
+                  echo "forward=$FORWARD" >> "$GITHUB_OUTPUT"
+                  echo "reverse=$REVERSE" >> "$GITHUB_OUTPUT"
+                  echo "**Forward drift** (production differs from repo): $FORWARD file(s)" >> "$GITHUB_STEP_SUMMARY"
+                  echo "**Reverse drift** (on production, absent from repo): $REVERSE file(s)" >> "$GITHUB_STEP_SUMMARY"
+                  if [ "$FORWARD" -gt 0 ] || [ "$REVERSE" -gt 0 ]; then
+                    echo "::warning::Drift detected — review the job summary before deploying to production."
+                  fi
 
-      - name: Report drift via GitHub issue
-        if: steps.counts.outputs.forward != '0' || steps.counts.outputs.reverse != '0'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          FORWARD=${{ steps.counts.outputs.forward }}
-          REVERSE=${{ steps.counts.outputs.reverse }}
-          BRANCH="${{ github.event.inputs.branch }}"
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          DATE=$(date -u '+%Y-%m-%d %H:%M UTC')
+            - name: Report drift via GitHub issue
+              if: steps.counts.outputs.forward != '0' || steps.counts.outputs.reverse != '0'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  FORWARD=${{ steps.counts.outputs.forward }}
+                  REVERSE=${{ steps.counts.outputs.reverse }}
+                  BRANCH="${{ github.event.inputs.branch }}"
+                  RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  DATE=$(date -u '+%Y-%m-%d %H:%M UTC')
 
-          FORWARD_BODY=$(head -100 forward_drift.txt)
-          REVERSE_BODY=$(head -100 reverse_drift.txt)
-          FORWARD_LINES=$(wc -l < forward_drift.txt)
-          REVERSE_LINES=$(wc -l < reverse_drift.txt)
-          [ "$FORWARD_LINES" -gt 100 ] && FORWARD_NOTE="*(truncated — $FORWARD_LINES lines total; see run for full output)*" || FORWARD_NOTE=""
-          [ "$REVERSE_LINES" -gt 100 ] && REVERSE_NOTE="*(truncated — $REVERSE_LINES lines total; see run for full output)*" || REVERSE_NOTE=""
+                  FORWARD_BODY=$(head -100 forward_drift.txt)
+                  REVERSE_BODY=$(head -100 reverse_drift.txt)
+                  FORWARD_LINES=$(wc -l < forward_drift.txt)
+                  REVERSE_LINES=$(wc -l < reverse_drift.txt)
+                  [ "$FORWARD_LINES" -gt 100 ] && FORWARD_NOTE="*(truncated — $FORWARD_LINES lines total; see run for full output)*" || FORWARD_NOTE=""
+                  [ "$REVERSE_LINES" -gt 100 ] && REVERSE_NOTE="*(truncated — $REVERSE_LINES lines total; see run for full output)*" || REVERSE_NOTE=""
 
-          cat > /tmp/drift_body.md << BODY
-          **Branch compared:** \`${BRANCH}\`
-          **Detected:** ${DATE}
-          **Run:** ${RUN_URL}
+                  cat > /tmp/drift_body.md << BODY
+                  **Branch compared:** \`${BRANCH}\`
+                  **Detected:** ${DATE}
+                  **Run:** ${RUN_URL}
 
-          | Direction | Count |
-          |-----------|-------|
-          | Forward drift (repo → production) | ${FORWARD} file(s) |
-          | Reverse drift (production → repo) | ${REVERSE} file(s) |
+                  | Direction | Count |
+                  |-----------|-------|
+                  | Forward drift (repo → production) | ${FORWARD} file(s) |
+                  | Reverse drift (production → repo) | ${REVERSE} file(s) |
 
-          **Forward drift** — files a deployment would overwrite or add on production:
+                  **Forward drift** — files a deployment would overwrite or add on production:
 
-          \`\`\`
-          ${FORWARD_BODY}
-          \`\`\`
-          ${FORWARD_NOTE}
+                  \`\`\`
+                  ${FORWARD_BODY}
+                  \`\`\`
+                  ${FORWARD_NOTE}
 
-          **Reverse drift** — files on production not tracked in \`${BRANCH}\`:
+                  **Reverse drift** — files on production not tracked in \`${BRANCH}\`:
 
-          \`\`\`
-          ${REVERSE_BODY}
-          \`\`\`
-          ${REVERSE_NOTE}
+                  \`\`\`
+                  ${REVERSE_BODY}
+                  \`\`\`
+                  ${REVERSE_NOTE}
 
-          ---
-          Resolve by backporting cowboy edits to the repo, or confirming the production state is intentional. Re-run this workflow to verify once addressed.
-          BODY
+                  ---
+                  Resolve by backporting cowboy edits to the repo, or confirming the production state is intentional. Re-run this workflow to verify once addressed.
+                  BODY
 
-          gh label create "production-drift" \
-            --color "D93F0B" \
-            --description "Production files differ from the repository" \
-            --force
+                  gh label create "production-drift" \
+                    --color "D93F0B" \
+                    --description "Production files differ from the repository" \
+                    --force
 
-          EXISTING=$(gh issue list \
-            --label "production-drift" \
-            --state open \
-            --json number \
-            --jq '.[0].number' 2>/dev/null || true)
+                  EXISTING=$(gh issue list \
+                    --label "production-drift" \
+                    --state open \
+                    --json number \
+                    --jq '.[0].number' 2>/dev/null || true)
 
-          if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" --body-file /tmp/drift_body.md
-          else
-            gh issue create \
-              --title "Production drift detected — \`${BRANCH}\` (${DATE})" \
-              --body-file /tmp/drift_body.md \
-              --label "production-drift"
-          fi
-```
+                  if [ -n "$EXISTING" ]; then
+                    gh issue comment "$EXISTING" --body-file /tmp/drift_body.md
+                  else
+                    gh issue create \
+                      --title "Production drift detected — \`${BRANCH}\` (${DATE})" \
+                      --body-file /tmp/drift_body.md \
+                      --label "production-drift"
+                  fi
+````
 
 **Reading the output:**
 
-- **Forward drift** — files the deploy workflow *would* overwrite or add. Lines starting with `>f` indicate content differs from the repo; `*deleting` means the file exists on production but not in the repo (and would be removed by a deploy with `--delete`).
+- **Forward drift** — files the deploy workflow _would_ overwrite or add. Lines starting with `>f` indicate content differs from the repo; `*deleting` means the file exists on production but not in the repo (and would be removed by a deploy with `--delete`).
 - **Reverse drift** — files present on production that are absent from the repo branch. May indicate cowboy additions or plugins/files installed outside of version control.
 
 When drift is detected, the workflow opens a `production-drift` GitHub issue (or appends a comment to an existing open one). Close the issue once the drift is resolved and a clean run confirms production is in sync.

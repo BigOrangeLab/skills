@@ -36,12 +36,12 @@ Do NOT use this as a substitute for monitoring — schedule regular runs (see Ph
 
 ### Verification tiers
 
-| Tier | Source type | Method |
-|------|-------------|--------|
-| **1 — Auto-verify** | `wordpress.org` plugins, themes, and core | WP-CLI checksums; falls back to the checksums API directly |
-| **2 — Upstream compare** | `github.com/*` open-source plugins/themes | Clone/download the tagged release and diff |
+| Tier                      | Source type                                     | Method                                                                         |
+| ------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------ |
+| **1 — Auto-verify**       | `wordpress.org` plugins, themes, and core       | WP-CLI checksums; falls back to the checksums API directly                     |
+| **2 — Upstream compare**  | `github.com/*` open-source plugins/themes       | Clone/download the tagged release and diff                                     |
 | **3 — Baseline snapshot** | Premium, CodeCanyon, SaaS plugins, `unknown ⚠️` | Generate local SHA-256 checksums as a reference; re-run to detect future drift |
-| **4 — Skip** | `first-party` (in-repo) code | Covered by git history; no external reference needed |
+| **4 — Skip**              | `first-party` (in-repo) code                    | Covered by git history; no external reference needed                           |
 
 ### What counts as a "modification"
 
@@ -128,11 +128,11 @@ git diff HEAD -- wp-content/plugins/<slug>/<file>
 
 Three outcomes:
 
-| git state | Implication |
-|-----------|-------------|
-| Tracked, matches HEAD | Intentional modification — committed and documented. Safe. |
+| git state                  | Implication                                                                |
+| -------------------------- | -------------------------------------------------------------------------- |
+| Tracked, matches HEAD      | Intentional modification — committed and documented. Safe.                 |
 | Tracked, differs from HEAD | Production diverged from the repo. Cowboy edit or failed deploy. Escalate. |
-| Not tracked | Production-only modification of a third-party file. Review carefully. |
+| Not tracked                | Production-only modification of a third-party file. Review carefully.      |
 
 Any file in the third category — modified third-party code not tracked in git — should be reviewed line-by-line before being committed or discarded.
 
@@ -169,6 +169,7 @@ diff -rq --exclude='.git' /tmp/plugin-ref/ wp-content/plugins/${SLUG}/
 ```
 
 Differences found this way may be:
+
 - **Intentional local patches** — if tracked in git, they are documented. Acceptable.
 - **Upstream updates not yet installed** — the local version is behind. Note but do not change.
 - **Untracked modifications** — same as Tier 1: review line-by-line.
@@ -203,7 +204,7 @@ find "wp-content/plugins/${SLUG}" -type f | sort | \
   | diff "checksums/${SLUG}-${VERSION}.sha256" -
 ```
 
-Any lines in the diff output indicate files that changed since the baseline was taken. This does not tell you *whether* the change is malicious, only that something changed — but it gives you a concrete diff to investigate.
+Any lines in the diff output indicate files that changed since the baseline was taken. This does not tell you _whether_ the change is malicious, only that something changed — but it gives you a concrete diff to investigate.
 
 **When a plugin updates:** regenerate the manifest under the new version slug (`plugin-name-X.Y.Z.sha256`) and commit alongside the PLUGINS.md update. Retain the previous version's file in git so history is preserved.
 
@@ -216,13 +217,13 @@ Update PLUGINS.md with the verification outcome for each plugin. A simple additi
 
 Last run: <YYYY-MM-DD>
 
-| Slug | Tier | Outcome | Notes |
-|------|------|---------|-------|
-| classic-editor | 1 | ✓ Clean | |
-| advanced-custom-fields-pro | 3 | Baselined | checksums/advanced-custom-fields-pro-6.8.2.sha256 |
-| photonfill-master | 2 | ✓ Clean | Compared against alleyinteractive/photonfill v0.2.1 |
-| gravityforms | 3 | Baselined | checksums/gravityforms-2.10.2.sha256 |
-| some-plugin | 1 | ⚠️ Modified | wp-content/plugins/some-plugin/some-file.php — tracked in git, intentional |
+| Slug                       | Tier | Outcome     | Notes                                                                      |
+| -------------------------- | ---- | ----------- | -------------------------------------------------------------------------- |
+| classic-editor             | 1    | ✓ Clean     |                                                                            |
+| advanced-custom-fields-pro | 3    | Baselined   | checksums/advanced-custom-fields-pro-6.8.2.sha256                          |
+| photonfill-master          | 2    | ✓ Clean     | Compared against alleyinteractive/photonfill v0.2.1                        |
+| gravityforms               | 3    | Baselined   | checksums/gravityforms-2.10.2.sha256                                       |
+| some-plugin                | 1    | ⚠️ Modified | wp-content/plugins/some-plugin/some-file.php — tracked in git, intentional |
 ```
 
 Commit the verification log and any new checksum files together:
@@ -240,10 +241,10 @@ Add a WP-CLI checksum step to the drift-detection workflow (see `wp-github-deplo
 - name: Verify plugin/theme checksums on production
   continue-on-error: true
   run: |
-    ssh -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} \
-      "wp --path=${{ vars.WP_PATH }} plugin verify-checksums --all ; \
-       wp --path=${{ vars.WP_PATH }} theme verify-checksums --all ; \
-       wp --path=${{ vars.WP_PATH }} core verify-checksums"
+      ssh -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} \
+        "wp --path=${{ vars.WP_PATH }} plugin verify-checksums --all ; \
+         wp --path=${{ vars.WP_PATH }} theme verify-checksums --all ; \
+         wp --path=${{ vars.WP_PATH }} core verify-checksums"
 ```
 
 Use `;` not `&&` between commands — if one check finds issues and exits non-zero, `&&` would silently skip the remaining checks. `continue-on-error: true` keeps the overall workflow green so this step is informational, not a deploy blocker.

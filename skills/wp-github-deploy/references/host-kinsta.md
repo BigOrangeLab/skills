@@ -37,35 +37,35 @@ Add the public key in **GitHub → repo → Settings → Deploy keys** (read-onl
 name: Deploy to Kinsta
 
 on:
-  push:
-    branches:
-      - trunk   # change to match the repo's default branch
+    push:
+        branches:
+            - trunk # change to match the repo's default branch
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy via SSH (git pull on server)
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.KINSTA_SERVER_IP }}
-          username: ${{ secrets.KINSTA_USERNAME }}
-          password: ${{ secrets.KINSTA_PASSWORD }}
-          port: ${{ secrets.KINSTA_PORT }}
-          script: |
-            cd /www/${{ vars.KINSTA_SITE_FOLDER }}/public
-            git fetch origin ${{ github.ref_name }}
-            git reset --hard origin/${{ github.ref_name }}
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy via SSH (git pull on server)
+              uses: appleboy/ssh-action@v1
+              with:
+                  host: ${{ secrets.KINSTA_SERVER_IP }}
+                  username: ${{ secrets.KINSTA_USERNAME }}
+                  password: ${{ secrets.KINSTA_PASSWORD }}
+                  port: ${{ secrets.KINSTA_PORT }}
+                  script: |
+                      cd /www/${{ vars.KINSTA_SITE_FOLDER }}/public
+                      git fetch origin ${{ github.ref_name }}
+                      git reset --hard origin/${{ github.ref_name }}
 ```
 
 ## Required secrets/variables
 
-| Name | Type | Value |
-|------|------|-------|
-| `KINSTA_SERVER_IP` | Secret | Host IP address from MyKinsta Info tab |
-| `KINSTA_USERNAME` | Secret | SFTP/SSH username from MyKinsta Info tab |
-| `KINSTA_PASSWORD` | Secret | SFTP/SSH password from MyKinsta Info tab |
-| `KINSTA_PORT` | Secret | SSH port from MyKinsta Info tab (varies per site) |
+| Name                 | Type     | Value                                                                            |
+| -------------------- | -------- | -------------------------------------------------------------------------------- |
+| `KINSTA_SERVER_IP`   | Secret   | Host IP address from MyKinsta Info tab                                           |
+| `KINSTA_USERNAME`    | Secret   | SFTP/SSH username from MyKinsta Info tab                                         |
+| `KINSTA_PASSWORD`    | Secret   | SFTP/SSH password from MyKinsta Info tab                                         |
+| `KINSTA_PORT`        | Secret   | SSH port from MyKinsta Info tab (varies per site)                                |
 | `KINSTA_SITE_FOLDER` | Variable | Site folder name (e.g. `mysitename`); deploy path becomes `/www/<folder>/public` |
 
 ## Notes
@@ -73,14 +73,14 @@ jobs:
 - **IP allowlist conflict**: If the Kinsta site has an IP allowlist configured, GitHub Actions runner IPs will be blocked. Disable the allowlist before the workflow can succeed — this is the most common failure mode.
 - **Pull model, not push**: There is no rsync step. The server fetches and hard-resets to the pushed branch. Files not tracked in git (uploads, cache) are untouched.
 - **`.deployignore` does not apply** — this model doesn't use rsync's `--exclude-from`. Use `.gitignore` to keep files out of the repo and therefore out of the deployment.
-- **Password vs key auth**: The workflow uses Kinsta's SFTP/SSH password to authenticate the CI runner to the server. The *server's* deploy key (set up in the one-time step above) handles the server-to-GitHub connection.
+- **Password vs key auth**: The workflow uses Kinsta's SFTP/SSH password to authenticate the CI runner to the server. The _server's_ deploy key (set up in the one-time step above) handles the server-to-GitHub connection.
 - **`appleboy/ssh-action` version**: Pin to a specific version tag. Check the [action's releases](https://github.com/appleboy/ssh-action/releases) for the current stable tag.
 
 ## Drift detection
 
 Two options, depending on whether the IP allowlist is active:
 
-**Option A — rsync from GitHub Actions (untested; requires no IP allowlist)**
+### Option A — rsync from GitHub Actions (untested; requires no IP allowlist)
 
 Kinsta provides SSH access on a per-site port. In theory, the standard drift-detection workflow from the parent skill can connect rsync over that SSH tunnel — but this has not been confirmed in practice. Two prerequisites must be met before attempting it:
 
@@ -89,7 +89,7 @@ Kinsta provides SSH access on a per-site port. In theory, the standard drift-det
 
 If both conditions are met, use the same secrets/variables as the deployment workflow (`KINSTA_SERVER_IP` → `DEPLOY_HOST`, etc.) and follow the standard drift-detection template.
 
-**Option B — git status on the server (IP allowlist active, git-pull deployment model)**
+### Option B — git status on the server (IP allowlist active, git-pull deployment model)
 
 SSH directly into the Kinsta server and check git state:
 

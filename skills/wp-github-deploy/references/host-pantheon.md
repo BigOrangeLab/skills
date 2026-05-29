@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 -->
+
 # Pantheon Deployment
 
 Pantheon uses a **Git-push model** — deployments push commits to Pantheon's internal Git remote; Pantheon then applies the code to the environment. This is fundamentally different from rsync-based hosts.
@@ -20,39 +22,39 @@ The official Pantheon GitHub Action. Handles both branch deploys (to the Pantheo
 name: Deploy to Pantheon
 
 on:
-  push:
-    branches:
-      - trunk   # change to match the repo's default branch — deploys to Pantheon Dev
-  pull_request:
-    types: [opened, synchronize, reopened]   # creates/updates a Multidev environment
+    push:
+        branches:
+            - trunk # change to match the repo's default branch — deploys to Pantheon Dev
+    pull_request:
+        types: [opened, synchronize, reopened] # creates/updates a Multidev environment
 
 jobs:
-  push:
-    permissions:
-      deployments: write
-      contents: read
-      pull-requests: read
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    push:
+        permissions:
+            deployments: write
+            contents: read
+            pull-requests: read
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Push to Pantheon
-        uses: pantheon-systems/push-to-pantheon@0.9.2
-        with:
-          ssh_key: ${{ secrets.PANTHEON_SSH_KEY }}
-          machine_token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
-          site: ${{ vars.PANTHEON_SITE }}
+            - name: Push to Pantheon
+              uses: pantheon-systems/push-to-pantheon@0.9.2
+              with:
+                  ssh_key: ${{ secrets.PANTHEON_SSH_KEY }}
+                  machine_token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+                  site: ${{ vars.PANTHEON_SITE }}
 ```
 
 ### Required secrets/variables
 
-| Name | Type | Value |
-|------|------|-------|
-| `PANTHEON_SSH_KEY` | Secret | Private SSH key whose public half is added to your Pantheon account (Dashboard → Account → SSH Keys) |
-| `PANTHEON_MACHINE_TOKEN` | Secret | Pantheon machine token (Dashboard → Account → Machine Tokens) |
-| `PANTHEON_SITE` | Variable | Pantheon site machine name (from `terminus site:list` or the dashboard URL slug) |
+| Name                     | Type     | Value                                                                                                |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| `PANTHEON_SSH_KEY`       | Secret   | Private SSH key whose public half is added to your Pantheon account (Dashboard → Account → SSH Keys) |
+| `PANTHEON_MACHINE_TOKEN` | Secret   | Pantheon machine token (Dashboard → Account → Machine Tokens)                                        |
+| `PANTHEON_SITE`          | Variable | Pantheon site machine name (from `terminus site:list` or the dashboard URL slug)                     |
 
 ### Notes
 
@@ -72,36 +74,36 @@ Use this if `push-to-pantheon` doesn't support a workflow you need (e.g. deployi
 name: Deploy to Pantheon (manual)
 
 on:
-  push:
-    branches:
-      - trunk
+    push:
+        branches:
+            - trunk
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Install Terminus
-        uses: pantheon-systems/terminus-github-actions@v1
-        with:
-          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+            - name: Install Terminus
+              uses: pantheon-systems/terminus-github-actions@v1
+              with:
+                  pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
 
-      - name: Push to Pantheon Dev
-        run: |
-          terminus connection:set ${{ vars.PANTHEON_SITE }}.dev git
-          git remote add pantheon $(terminus connection:info ${{ vars.PANTHEON_SITE }}.dev --field=git_url)
-          git push pantheon HEAD:master
+            - name: Push to Pantheon Dev
+              run: |
+                  terminus connection:set ${{ vars.PANTHEON_SITE }}.dev git
+                  git remote add pantheon $(terminus connection:info ${{ vars.PANTHEON_SITE }}.dev --field=git_url)
+                  git push pantheon HEAD:master
 ```
 
 ### Required secrets/variables
 
-| Name | Type | Value |
-|------|------|-------|
-| `PANTHEON_MACHINE_TOKEN` | Secret | Pantheon machine token from your account dashboard |
-| `PANTHEON_SITE` | Variable | Pantheon site name slug |
+| Name                     | Type     | Value                                              |
+| ------------------------ | -------- | -------------------------------------------------- |
+| `PANTHEON_MACHINE_TOKEN` | Secret   | Pantheon machine token from your account dashboard |
+| `PANTHEON_SITE`          | Variable | Pantheon site name slug                            |
 
 ### Notes
 

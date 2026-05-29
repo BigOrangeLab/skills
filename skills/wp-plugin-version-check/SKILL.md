@@ -28,19 +28,19 @@ Do NOT use before PLUGINS.md is set up — the workflow reads from it and the ca
 
 - `.github/plugin-versions-cache.json` — machine-readable version store; one entry per tracked plugin.
 - `.github/plugin-versions-cache-schema.json` — JSON Schema for the cache; enables editor validation and CI checks.
-- `.github/workflows/plugin-version-check.yml` — manually triggered workflow (`workflow_dispatch`); add a `schedule:` trigger to enable periodic runs. Opens a PR when versions change.
+- `.github/workflows/plugin-version-check.yml` — manually triggered workflow (`workflow_dispatch`); add a `schedule:` trigger to enable periodic runs. Opens a PR when versions change. Copy the template from [references/workflow.yml](references/workflow.yml).
 - `PLUGINS.md` — updated `Version` column and `## Available Updates` section (via PR).
 
 ## How version checking works
 
 Plugins are checked by source type:
 
-| Source type | Method | What you get |
-|-------------|--------|--------------|
-| `wporg` | `api.wordpress.org/plugins/info/1.0/{slug}.json` | Latest available version |
-| `github` | GitHub releases API, falling back to tags | Latest release/tag |
-| `premium` / `saas` with `update_api` | Vendor API (EDD, ACF REST, TGM — see Phase 3) | Latest version if API responds |
-| `premium` / `saas` without `update_api` | Production WP-CLI scan only | Detects installs/updates on server; cannot check for available updates |
+| Source type                             | Method                                           | What you get                                                           |
+| --------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- |
+| `wporg`                                 | `api.wordpress.org/plugins/info/1.0/{slug}.json` | Latest available version                                               |
+| `github`                                | GitHub releases API, falling back to tags        | Latest release/tag                                                     |
+| `premium` / `saas` with `update_api`    | Vendor API (EDD, ACF REST, TGM — see Phase 3)    | Latest version if API responds                                         |
+| `premium` / `saas` without `update_api` | Production WP-CLI scan only                      | Detects installs/updates on server; cannot check for available updates |
 
 The workflow always detects installed-version changes on production (via WP-CLI over SSH), regardless of source type. The source type determines only whether it can additionally check for newer available versions.
 
@@ -50,7 +50,7 @@ The workflow always detects installed-version changes on production (via WP-CLI 
 
 The cache JSON must exist before the workflow runs. Bootstrap it by classifying each entry in PLUGINS.md into a source type:
 
-```
+```text
 source_type  when to use
 -----------  -----------
 wporg        Plugin slug resolves at api.wordpress.org/plugins/info
@@ -71,21 +71,21 @@ Create `.github/plugin-versions-cache.json` with a `$schema` pointer and a `plug
 
 ```json
 {
-  "$schema": "./plugin-versions-cache-schema.json",
-  "_meta": {
-    "generated": "YYYY-MM-DD",
-    "description": "Plugin version tracking cache."
-  },
-  "plugins": {
-    "classic-editor": {
-      "title": "Classic Editor",
-      "status": "active",
-      "source_type": "wporg",
-      "installed_version": "1.6.7",
-      "latest_version": null,
-      "latest_checked": null
-    }
-  }
+	"$schema": "./plugin-versions-cache-schema.json",
+	"_meta": {
+		"generated": "YYYY-MM-DD",
+		"description": "Plugin version tracking cache."
+	},
+	"plugins": {
+		"classic-editor": {
+			"title": "Classic Editor",
+			"status": "active",
+			"source_type": "wporg",
+			"installed_version": "1.6.7",
+			"latest_version": null,
+			"latest_checked": null
+		}
+	}
 }
 ```
 
@@ -104,13 +104,13 @@ Copy the workflow template from [references/workflow.yml](references/workflow.ym
 
 **Variables** (Settings → Variables — visible in logs):
 
-| Name | Required | Value |
-|------|----------|-------|
-| `DEPLOY_HOST` | Yes | Server hostname or IP |
-| `DEPLOY_PORT` | Yes | SSH port |
-| `DEPLOY_USER` | Yes | SSH username |
-| `WP_PATH` | Yes | Absolute path to the WordPress root on the server (parent of `wp-content/` — same as `wp-integrity-check`) |
-| `BASE_BRANCH` | No | Branch automated PRs target. Defaults to `trunk` if unset. Set to a dev/staging branch (e.g. `dev`) to stage automated changes there before manually promoting them to trunk. |
+| Name          | Required | Value                                                                                                                                                                         |
+| ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEPLOY_HOST` | Yes      | Server hostname or IP                                                                                                                                                         |
+| `DEPLOY_PORT` | Yes      | SSH port                                                                                                                                                                      |
+| `DEPLOY_USER` | Yes      | SSH username                                                                                                                                                                  |
+| `WP_PATH`     | Yes      | Absolute path to the WordPress root on the server (parent of `wp-content/` — same as `wp-integrity-check`)                                                                    |
+| `BASE_BRANCH` | No       | Branch automated PRs target. Defaults to `trunk` if unset. Set to a dev/staging branch (e.g. `dev`) to stage automated changes there before manually promoting them to trunk. |
 
 **`BASE_BRANCH` and the intermediary branch pattern**
 
@@ -121,6 +121,7 @@ gh variable set BASE_BRANCH --body "dev"
 ```
 
 The workflow will then:
+
 1. Check out from `BASE_BRANCH` (so the feature branch diverges from dev, not trunk)
 2. Open or update the `update/plugin-versions` PR targeting `BASE_BRANCH`
 
@@ -130,8 +131,8 @@ If `BASE_BRANCH` is not set, all behaviour defaults to `trunk`.
 
 **Secrets** (Settings → Secrets — encrypted):
 
-| Name | Value |
-|------|-------|
+| Name             | Value                                                      |
+| ---------------- | ---------------------------------------------------------- |
 | `DEPLOY_SSH_KEY` | Private key for SSH (shared with drift-detection workflow) |
 
 The workflow is triggered manually (`workflow_dispatch`). A `schedule:` trigger is intentionally omitted until the workflow has been tested and is ready for unattended runs — add one (e.g. `cron: '0 9 * * 1'` for Mondays at 9am UTC) when ready. When it finds changes, it force-pushes to an `update/plugin-versions` branch and opens a PR against `BASE_BRANCH` (or comments on the existing open one).
@@ -158,7 +159,7 @@ grep -rn 'api_url\|update_url\|store_url\|remote_url\|API_URL' plugin-dir/ | gre
 
 **EDD Software Licensing** — used by Yoast, Gravity Wiz, many others:
 
-```
+```text
 GET {store_url}?edd_action=get_version&item_name={item_name}&license={key}&version={current}&url={site_url}
 ```
 
@@ -181,7 +182,7 @@ The `item_name` must match the EDD product name exactly. If the API returns `{"e
 
 **ACF-style custom REST** — used by Advanced Custom Fields PRO:
 
-```
+```text
 GET https://connect.advancedcustomfields.com/v2/plugins/get-info?p=pro
 Header: X-ACF-License: {key}
 ```
@@ -204,7 +205,7 @@ Cache entry:
 
 **TGM-style** — used by Easy WP SMTP Pro and others:
 
-```
+```text
 GET {endpoint}?action={action}&tgm-updater-plugin={slug}&tgm-updater-key={key}
 ```
 
@@ -260,14 +261,14 @@ If none of these work, leave `update_api` absent in the cache entry. The workflo
 
 The workflow maintains shields.io badges in the PLUGINS.md Source column on every run, replacing plain-text values with colour-coded badges that link directly to the plugin's source. The colour signals the plugin's relationship at a glance:
 
-| Color | Hex | Meaning |
-|-------|-----|---------|
-| Blue (WordPress logo) | `21759B` | Hosted on wordpress.org — links to the plugin's own page |
-| Dark (GitHub logo) | `24292e` | Open-source GitHub project — links to the specific repo |
-| Green | `22C55E` | First-party — developed in-house, tracked in this repo |
-| Orange | `FF6900` | Commercial / premium — links to vendor homepage |
-| Purple | `7C3AED` | SaaS — free plugin, paid external service — links to vendor |
-| Gray | `6B7280` | Host-managed — installed by the hosting provider |
+| Color                 | Hex      | Meaning                                                     |
+| --------------------- | -------- | ----------------------------------------------------------- |
+| Blue (WordPress logo) | `21759B` | Hosted on wordpress.org — links to the plugin's own page    |
+| Dark (GitHub logo)    | `24292e` | Open-source GitHub project — links to the specific repo     |
+| Green                 | `22C55E` | First-party — developed in-house, tracked in this repo      |
+| Orange                | `FF6900` | Commercial / premium — links to vendor homepage             |
+| Purple                | `7C3AED` | SaaS — free plugin, paid external service — links to vendor |
+| Gray                  | `6B7280` | Host-managed — installed by the hosting provider            |
 
 The `source_badge(slug, source_type, vendor_url, github_repo)` function in the workflow script generates the correct badge for each plugin using data from the cache. It is called for:
 
