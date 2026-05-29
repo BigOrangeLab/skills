@@ -158,7 +158,18 @@ ssh <user>@<host> -p <port> "wp --path=<absolute-wp-path> plugin list --fields=n
 
 The `--path` argument usually needs to be an absolute path (e.g. `/www/sitename_123/public`). Find it by SSHing in and running `pwd` from the WordPress root.
 
-Create `PLUGINS.md` at the git root (whether that is `wp-content/` or the WordPress root) with three sections: **Active**, **Inactive**, and **Must-Use**. Include a column for whether each plugin is tracked in the repo (`✓` or blank). See [references/plugins-md-template.md](references/plugins-md-template.md) for the full template and `.deployignore` placement note.
+WP-CLI provides `name`, `title`, `status`, and `version`. The **Source** and **License** columns require manual annotation — WP-CLI has no knowledge of commercial licensing or billing details.
+
+Create `PLUGINS.md` at the git root (whether that is `wp-content/` or the WordPress root) with three sections: **Active**, **Inactive**, and **Must-Use**. See [references/plugins-md-template.md](references/plugins-md-template.md) for the full table format, column conventions, and `.deployignore` placement note.
+
+#### Annotate sources and licenses
+
+For each plugin, fill in:
+- **In Repo** — `✓` if the plugin is tracked in this repository, blank otherwise.
+- **Source** — where the plugin comes from: `wordpress.org`, the vendor's site (e.g. `gravityforms.com`), or `first-party` for in-house code.
+- **License** — for premium plugins: who holds the license and the billing cycle. For free plugins: `Free`. For first-party: `—`.
+
+If the source of a plugin is not recognizable from its slug or title, mark it `unknown ⚠️` and **ask the user** rather than guessing. Do not leave any entry at `unknown ⚠️` permanently — it may indicate an unlicensed premium copy or an abandoned fork.
 
 ### Phase 4: Review and update ignore rules
 
@@ -244,6 +255,15 @@ git commit -m "Update docs to reflect current production state."
 
 Do not mix doc updates with code changes.
 
+#### Create or review .github/copilot-instructions.md
+
+GitHub Copilot uses this file for workspace context during code reviews and inline suggestions. It should mirror the architecture and conventions captured in `AGENTS.md`.
+
+- **If the file does not exist**: create a basic one drawing from `AGENTS.md` — codebase scope, key plugin/theme structure, code conventions (naming prefixes, hook-first patterns, text domains), and risk-sensitive paths that require extra care.
+- **If the file exists**: review it against the current state of `AGENTS.md` and what you know about the codebase. Update anything stale or missing.
+
+Commit alongside other doc-only updates in the same commit.
+
 ### Phase 8: Evaluate dev tooling (wp-client-repo-setup)
 
 After the production state is committed, assess whether the repo has adequate development tooling (PHPCS, WPCS, PHPStan, `@wordpress/scripts`, etc.).
@@ -280,7 +300,18 @@ If deployment workflows exist:
   - Via GitHub UI: Settings → Actions → disable the specific workflow, or rename the workflow file to `*.yml.disabled` in a commit.
   - Via `gh`: `gh workflow disable <workflow-name>` — see the `github-cli` skill ([references/actions.md](../github-cli/references/actions.md)) for full `gh workflow` usage.
 
-If no deployment workflow exists yet, this is the time to plan one. Most hosts (Kinsta, WP Engine, etc.) have documented GitHub Actions integration. At minimum, flag it as a follow-up so the deployment path from GitHub to production is established before the repo is actively used.
+If no deployment workflow exists yet, this is the time to plan one. Use the `wp-github-deploy` skill for host-specific deployment workflow setup and a drift-detection workflow that surfaces files changed directly on production before a deploy overwrites them.
+
+#### Branch protection (human action required)
+
+Raise this explicitly with the user and require a conscious yes/no answer — do not skip it silently.
+
+> "Branch protection on `<branch>` is not yet configured. Recommended rules for a production-deploy branch: require pull request reviews before merging, require status checks to pass, disallow force-pushes. Would you like to enable branch protection now, defer it, or explicitly skip it for this project?"
+
+- **If yes**: direct them to **GitHub UI → Settings → Branches → Add branch ruleset** (or Rulesets for newer GitHub). Do not configure it automatically — this is a governance decision.
+- **If deferred or skipped**: note it as a follow-up item so it surfaces again in the next session.
+
+A conscious "no" or "later" is acceptable. An unreviewed skip is not.
 
 ## Verification
 
