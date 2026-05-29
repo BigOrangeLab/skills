@@ -1,6 +1,6 @@
-# Generic SSH / Kinsta Deployment
+# Generic SSH Deployment
 
-Covers any host reachable via SSH where rsync is available. Kinsta uses this pattern — SSH credentials and port are found in the Kinsta dashboard under **Sites → SSH/SFTP**.
+Covers any host reachable via SSH where rsync is available. Use this when no host-specific reference exists.
 
 ## Workflow
 
@@ -51,5 +51,4 @@ jobs:
 ## Notes
 
 - **`--delete`** removes files on the server that were deleted from the repo. Remove it if the host puts files outside version control in the same directory (e.g. uploads, cache).
-- **Kinsta "Push to deploy" webhook** exists as an alternative to rsync but gives less control over what is and isn't deployed. rsync with `.deployignore` is preferred.
-- For Kinsta, the SSH port is assigned per site — do not assume 22.
+- **When to prefer this over a host-specific reference**: use `host-generic-ssh.md` only when no dedicated reference exists for the host. Hosts with specific patterns (Kinsta, WP Engine, Pantheon, Pressable) have their own files in this `references/` directory.

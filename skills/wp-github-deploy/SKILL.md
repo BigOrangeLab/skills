@@ -1,7 +1,7 @@
 ---
 name: wp-github-deploy
-description: "Use when setting up or improving GitHub Actions deployments for a WordPress site. Covers host-specific deployment workflows (Kinsta, WP Engine, Pantheon, generic SSH/rsync) and a manually-triggered drift-detection workflow that surfaces files changed directly on production that would be overwritten by deploying."
-compatibility: "WordPress sites with a GitHub repo and SSH/API access to the host. Requires gh CLI locally."
+description: "Use when setting up or improving GitHub Actions deployments for a WordPress site. Covers host-specific deployment workflows (Kinsta, WP Engine, Pantheon, Pressable, generic SSH/rsync) and a manually-triggered drift-detection workflow that surfaces files changed directly on production that would be overwritten by deploying."
+compatibility: "WordPress sites with a GitHub repo. SSH/API access required for rsync-based hosts (generic SSH); Kinsta, WP Engine, Pantheon, and Pressable use host-specific mechanisms. Requires gh CLI locally."
 license: MIT
 metadata:
     author: georgestephanis
@@ -29,7 +29,7 @@ Do NOT use this skill to set up the repo itself — use `wp-production-git-adopt
 ## Inputs required
 
 - **GitHub repo slug** — `owner/repo`, accessible via `gh`.
-- **Hosting provider** — Kinsta, WP Engine, Pantheon, or generic SSH. Determines which workflow template applies.
+- **Hosting provider** — Kinsta, WP Engine, Pantheon, Pressable, or generic SSH. Determines which workflow template applies.
 - **SSH credentials** — host, user, port, and SSH private key for the production server (for SSH-based hosts).
 - **Deploy path on server** — the absolute path to the directory that should be updated (e.g. `/www/sitename_123/public/wp-content/`). Confirm by SSHing in and running `pwd` from the wp-content or WP root.
 - **Branch to deploy from** — usually `trunk`, `main`, or `master`. Confirm against the repo's default branch.
@@ -43,157 +43,47 @@ Confirm the hosting provider and their preferred deployment method before writin
 
 | Host | Preferred pattern | Notes |
 |------|-------------------|-------|
-| **Kinsta** | SSH + rsync | SSH gateway; port varies per site. Kinsta also has a native CI/CD integration — see [references/host-kinsta.md](references/host-kinsta.md). |
+| **Kinsta** | Server-side git pull (`appleboy/ssh-action`) | CI SSHs in and runs `git fetch && git reset --hard`. Server needs a deploy key on GitHub. IP allowlist must be disabled. |
 | **WP Engine** | Official GitHub Action (`wpengine/github-action-wpe-site-deploy`) | Uses WP Engine's SSH Git Push feature. Simplest setup. |
-| **Pantheon** | `terminus` + official Pantheon actions | Git-push model; significantly different from rsync hosts. Use the `terminus-wp-cli` skill for context. |
-| **Pressable** | SSH + rsync | No official action; rsync via SSH gateway. Credentials from Pressable dashboard. |
+| **Pantheon** | `push-to-pantheon` action (recommended) or manual Terminus | Git-push model; handles Multidev for PRs + Dev for branch pushes. Use the `terminus-wp-cli` skill for context. |
+| **Pressable** | Native GitHub integration (no workflow YAML) | Configured entirely in the Pressable control panel. `.deployignore` must exist in the repo *before* activating. |
 | **Generic SSH** | rsync over SSH | Works for any host with SSH access and a known deploy path. |
 
 Ask the user to confirm the host if it is not already documented in AGENTS.md or a README.
 
 ### Phase 2: Create the deployment workflow
 
-Create `.github/workflows/deploy.yml` (or a host-specific name) using the appropriate template below. Commit it to a feature branch or directly to the default branch — do not push until the required secrets are configured (Phase 3).
+Open the reference for the detected host, copy the workflow YAML into `.github/workflows/deploy.yml` (or a host-specific name), and note the required secrets and variables — you'll provision them in Phase 3.
 
-#### Template A — Generic SSH / Kinsta (rsync)
+| Host | Reference |
+|------|-----------|
+| Kinsta | [references/host-kinsta.md](references/host-kinsta.md) |
+| WP Engine | [references/host-wp-engine.md](references/host-wp-engine.md) |
+| Pantheon | [references/host-pantheon.md](references/host-pantheon.md) |
+| Pressable | [references/host-pressable.md](references/host-pressable.md) |
+| Generic SSH | [references/host-generic-ssh.md](references/host-generic-ssh.md) |
 
-```yaml
-name: Deploy to Production
+Each reference includes the full workflow YAML, required secrets/variables table, and host-specific notes. To add a new host, create `references/host-<name>.md` following the same structure and add a row to this table.
 
-on:
-  push:
-    branches:
-      - trunk   # change to match the repo's default branch
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
-
-      - name: Add host to known_hosts
-        run: ssh-keyscan -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy via rsync
-        run: |
-          rsync -avz --delete \
-            --no-perms --no-owner --no-group \
-            --exclude-from=.deployignore \
-            --exclude='.git' \
-            ./ \
-            ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/
-        env:
-          RSYNC_RSH: ssh -p ${{ vars.DEPLOY_PORT }}
-```
-
-**Required secrets/variables:**
-
-| Name | Type | Value |
-|------|------|-------|
-| `DEPLOY_SSH_KEY` | Secret | Private key whose public half is authorized on the server |
-| `DEPLOY_HOST` | Variable | Server hostname or IP |
-| `DEPLOY_PORT` | Variable | SSH port (default 22, Kinsta varies) |
-| `DEPLOY_USER` | Variable | SSH username |
-| `DEPLOY_PATH` | Variable | Absolute path on server to deploy into |
-
-#### Template B — WP Engine
-
-```yaml
-name: Deploy to WP Engine
-
-on:
-  push:
-    branches:
-      - trunk
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to WP Engine
-        uses: wpengine/github-action-wpe-site-deploy@v3
-        with:
-          WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
-          WPE_ENV: ${{ vars.WPE_ENV }}
-          SRC_PATH: ./
-          REMOTE_PATH: wp-content/
-          EXCLUDES: .deployignore
-```
-
-**Required secrets/variables:**
-
-| Name | Type | Value |
-|------|------|-------|
-| `WPE_SSHG_KEY_PRIVATE` | Secret | WP Engine SSH Gateway private key |
-| `WPE_ENV` | Variable | WP Engine environment name (install slug) |
-
-See [WP Engine's official docs](https://wpengine.com/support/github-action-deploy/) for generating and authorizing the key pair. Verify parameter names (`WPE_ENV`, `SRC_PATH`, `REMOTE_PATH`, `EXCLUDES`) against the action's README for the pinned version before using — they have changed between major versions.
-
-#### Template C — Pantheon
-
-Pantheon deployments are more complex due to their Git-push model and multidev workflow. Use the `terminus-wp-cli` skill for Pantheon context, then:
-
-```yaml
-name: Deploy to Pantheon
-
-on:
-  push:
-    branches:
-      - trunk
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install Terminus
-        uses: pantheon-systems/terminus-github-actions@v1
-        with:
-          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
-
-      - name: Push to Pantheon
-        run: |
-          terminus connection:set ${{ vars.PANTHEON_SITE }}.live git
-          git remote add pantheon ssh://codeserver.dev.${{ vars.PANTHEON_SITE_UUID }}@codeserver.dev.${{ vars.PANTHEON_SITE_UUID }}.drush.in:2222/~/repository.git
-          git push pantheon HEAD:master
-```
-
-**Required secrets/variables:**
-
-| Name | Type | Value |
-|------|------|-------|
-| `PANTHEON_MACHINE_TOKEN` | Secret | Pantheon machine token from your account dashboard |
-| `PANTHEON_SITE` | Variable | Pantheon site name slug |
-| `PANTHEON_SITE_UUID` | Variable | Site UUID (from `terminus site:info <site>`) |
-
-Pantheon's deployment model differs significantly — consult their docs and the `terminus-wp-cli` skill before finalising.
+Commit to a feature branch or directly to the default branch — **do not push until secrets are configured** (Phase 3).
 
 ### Phase 3: Configure GitHub secrets and variables
 
-Add each secret and variable from the template to the GitHub repo before enabling the workflow:
+Add each secret and variable listed in the host reference file before enabling the workflow. Use `gh` for non-interactive provisioning:
 
 ```bash
-# Secrets (encrypted):
+# Secrets are encrypted and never shown in logs:
+gh secret set SECRET_NAME --body "value"
+# or pipe a key file directly:
 gh secret set DEPLOY_SSH_KEY < ~/.ssh/deploy_key_for_sitename
 
-# Variables (visible in logs, not encrypted):
-gh variable set DEPLOY_HOST --body "163.192.51.91"
-gh variable set DEPLOY_PORT --body "37131"
-gh variable set DEPLOY_USER --body "sitename"
-gh variable set DEPLOY_PATH --body "/www/sitename_123/public/wp-content"
+# Variables are visible in logs — use only for non-sensitive config:
+gh variable set VAR_NAME --body "value"
 ```
 
-Generate a dedicated deploy key pair rather than reusing a personal key:
+Confirm everything is set before pushing: `gh secret list && gh variable list`
+
+**For rsync-based hosts (generic SSH, Pressable)** — generate a dedicated deploy key pair rather than reusing a personal key:
 
 ```bash
 ssh-keygen -t ed25519 -C "github-deploy@sitename" -f ~/.ssh/deploy_sitename
@@ -207,9 +97,15 @@ Verify the connection manually before the workflow runs:
 ssh -i ~/.ssh/deploy_sitename -p <port> <user>@<host> "echo connected"
 ```
 
+**For Kinsta** — see the one-time server setup steps in [references/host-kinsta.md](references/host-kinsta.md); the server-side deploy key must be added to GitHub before the workflow can pull commits.
+
 ### Phase 4: Drift detection workflow
 
-Create `.github/workflows/drift-detection.yml`. This workflow is triggered manually and compares the current state of production against a chosen branch — surfacing files that were edited directly on the server and would be overwritten by a deployment. It reuses the same SSH secrets and variables as Template A (`DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_PORT`, `DEPLOY_USER`, `DEPLOY_PATH`) — provision those before running it.
+Create `.github/workflows/drift-detection.yml`. This workflow is triggered manually and compares the current state of production against a chosen branch — surfacing files that were edited directly on the server that a deploy would overwrite.
+
+**Applies to rsync-based hosts only** (generic SSH). For other hosts: Kinsta uses a git-pull model so run `git status` on the server instead; Pantheon has `terminus env:diffstat <site>.<env>`; WP Engine has no direct rsync access; Pressable's SSH credentials can be used with this workflow independently of their native deployment integration (see [references/host-pressable.md](references/host-pressable.md)).
+
+The workflow reuses the same SSH secrets and variables as the rsync deploy workflow (`DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_PORT`, `DEPLOY_USER`, `DEPLOY_PATH`) — provision those before running it.
 
 Note: `--checksum` compares files by content, not timestamps. This is accurate but slow on large plugin directories; on a typical production site the drift step may take several minutes.
 
@@ -402,7 +298,7 @@ Before merging or pushing to the deploy branch, run the drift detection workflow
 - **`.deployignore` not found** — rsync's `--exclude-from` will error if the file is missing. Confirm the path is relative to the checkout root.
 - **Drift detection shows everything as changed** — likely a line-ending mismatch. The templates already include `--no-perms --no-owner --no-group` to suppress permission noise; if all files still show as changed, check for Windows-style CRLF line endings introduced by the git checkout. Add `--checksum` to the deploy template (it's already in drift detection) to confirm whether files differ in content.
 - **WP Engine deploy fails with auth error** — the SSH Gateway key must be added to WP Engine's portal under **Users → Your Profile → SSH Keys**, not just to the server's authorized_keys.
-- **Pantheon rejects push** — Pantheon requires the site to be in Git connection mode (`terminus connection:set <site>.live git`) before accepting pushes.
+- **Pantheon rejects push** — the environment must be in Git connection mode before accepting pushes. Both the `push-to-pantheon` action and the manual approach call `terminus connection:set` to handle this, but if the environment has uncommitted SFTP changes the mode switch will fail — resolve or discard SFTP changes first.
 
 ## Escalation
 

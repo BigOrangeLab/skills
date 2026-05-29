@@ -1,64 +1,36 @@
 # Pressable Deployment
 
-Pressable (an Automattic-owned managed WordPress host) supports SSH access and standard rsync deployment. There is no official GitHub Action — use the generic rsync pattern with Pressable-specific connection details.
+Pressable has a **native GitHub integration** managed entirely through their control panel. There is no workflow YAML to write and no GitHub Actions runner involved — Pressable synchronises your repo to the server automatically when you push to the configured branch.
 
-SSH credentials are found in the Pressable control panel under **My Sites → [site] → SSH/SFTP Details**.
+## Setup
 
-## Workflow
+1. **Commit `.deployignore` to the repo first** — it must exist in the repository *before* you activate the integration, or files that should be excluded will be deleted from the server on first sync.
 
-```yaml
-name: Deploy to Pressable
+2. In the Pressable control panel, go to **My Sites → [site] → Advanced → GitHub Integration**.
 
-on:
-  push:
-    branches:
-      - trunk   # change to match the repo's default branch
+3. Connect your GitHub account and select the repository.
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+4. Choose the deployment branch (`trunk`, `main`, `master`, etc.).
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+5. Configure the deployment paths:
+   - **Repository Subdirectory** — the folder inside the repo to deploy *from* (e.g. `wp-content/` for a wp-content-rooted repo, or leave blank for the repo root).
+   - **Destination Path** — where on the server to deploy *to*, relative to `/htdocs` (e.g. `wp-content/` or leave blank for the site root).
 
-      - name: Add host to known_hosts
-        run: ssh-keyscan -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+6. Create a site backup before proceeding.
 
-      - name: Deploy via rsync
-        run: |
-          rsync -avz --delete \
-            --no-perms --no-owner --no-group \
-            --exclude-from=.deployignore \
-            --exclude='.git' \
-            ./ \
-            ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:${{ vars.DEPLOY_PATH }}/
-        env:
-          RSYNC_RSH: ssh -p ${{ vars.DEPLOY_PORT }}
-```
+7. Click **Set and Deploy** to trigger the initial sync.
 
 ## Required secrets/variables
 
-| Name | Type | Value |
-|------|------|-------|
-| `DEPLOY_SSH_KEY` | Secret | Private key whose public half is added to Pressable (see below) |
-| `DEPLOY_HOST` | Variable | SSH hostname from the Pressable dashboard (e.g. `ssh.pressable.com`) |
-| `DEPLOY_PORT` | Variable | SSH port from the dashboard (commonly `22`) |
-| `DEPLOY_USER` | Variable | SSH username from the dashboard |
-| `DEPLOY_PATH` | Variable | Absolute path to deploy into — typically `/srv/htdocs/wp-content/` for a wp-content-rooted repo, or `/srv/htdocs/` for a WordPress-root repo |
+None — the integration is authenticated by Pressable directly via their GitHub OAuth connection. No GitHub Actions secrets or workflow files are needed.
 
-## Adding the deploy key to Pressable
+## Important constraints
 
-Pressable does not currently support adding SSH public keys via the dashboard for automated deployments in the same way WP Engine does. Options:
+- **WordPress core files cannot be deployed** — they are symlinked read-only by Pressable. Attempting to include core in the repo will fail or be ignored.
+- **Files not in the repo are deleted from the server by default** — this includes any files previously deployed that have since been removed from the repo.
+- **Protected paths**: Pressable automatically prevents deletion of `wp-config.php`, `wp-content/uploads/`, `wp-content/cache/`, and default bundled themes, regardless of repo contents.
+- **`.deployignore` must be committed before activation** — if the file is added after the integration is already active, run a manual re-sync from the Pressable dashboard to apply it.
 
-1. **Use the site's existing SSH password auth** — set the `DEPLOY_SSH_KEY` secret to a key pair you've manually authorised via the Pressable support team or through their SSH key management if available on your plan.
-2. **Confirm current key management UI** — Pressable's control panel changes; check the dashboard's SSH/SFTP section or contact Pressable support to confirm how to authorise a deploy-specific public key before provisioning.
+## Drift detection
 
-## Notes
-
-- **Deploy path**: Confirm by SSHing in and running `pwd` from the WordPress root — do not assume `/srv/htdocs/`.
-- **Pressable's managed environment**: Pressable manages WordPress core upgrades and some plugin/theme auto-updates independently of deployments. After deploying, verify that no managed update has overwritten deployed files.
-- **`--delete` caveat**: Pressable may place managed files (cache, object-cache drops) in `wp-content/` directories. Review what `--delete` would remove before using it; consider excluding those directories explicitly.
+The native integration has no built-in drift detection. If you need to check whether files have been edited directly on the server since the last deploy, use Pressable's SSH access (credentials available in **My Sites → [site] → SSH/SFTP Details**) with the standard rsync drift detection workflow from the parent skill — the SSH variables required are the same as `host-generic-ssh.md`, even though the deployment itself does not use rsync.
