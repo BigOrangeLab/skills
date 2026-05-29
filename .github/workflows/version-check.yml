@@ -104,6 +104,7 @@ jobs:
                         per_page: 1,
                       });
 
+                      let issueNumber;
                       if (existing.length) {
                         await github.rest.issues.update({
                           owner: context.repo.owner,
@@ -112,7 +113,8 @@ jobs:
                           title: 'Skill version freshness report',
                           body,
                         });
-                        core.info(`Updated issue #${existing[0].number}`);
+                        issueNumber = existing[0].number;
+                        core.info(`Updated issue #${issueNumber}`);
                       } else {
                         const { data: created } = await github.rest.issues.create({
                           owner: context.repo.owner,
@@ -121,5 +123,15 @@ jobs:
                           body,
                           labels: [LABEL],
                         });
-                        core.info(`Created issue #${created.number}`);
+                        issueNumber = created.number;
+                        core.info(`Created issue #${issueNumber}`);
                       }
+
+                      // Post a comment on every run so the issue has a visible
+                      // history of how the stale count changed over time.
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: issueNumber,
+                        body: `**Weekly check — ${date}**\n\n${summary}`,
+                      });
