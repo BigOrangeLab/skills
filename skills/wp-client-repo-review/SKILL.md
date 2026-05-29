@@ -83,3 +83,5 @@ Ask for user input when:
 - The review boundary is unclear and the repo is too large for a full audit.
 - A finding depends on undocumented client infrastructure or deployment assumptions.
 - The risk tradeoff requires business context, such as legacy browser or PHP support guarantees.
+
+For plugin repos with a WordPress.org listing, also consider the `wp-readme-optimizer` skill — it audits and rewrites the `readme.txt` for discoverability and quality, which falls outside the security/code scope of this review.

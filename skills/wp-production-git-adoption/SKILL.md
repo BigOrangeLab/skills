@@ -287,6 +287,8 @@ ls composer.json package.json phpcs.xml phpcs.xml.dist .phpcs.xml 2>/dev/null
 
 Running `wp-client-repo-setup` during this session adds at minimum a `composer.json` with PHPCS/WPCS and a `phpcs.xml.dist` ruleset. Those changes should be committed as a separate, clearly-labelled commit after the production sync commits — not mixed in.
 
+For WordPress plugin repos, the `wp-github-actions` skill builds on this — it wires those same checks into GitHub Actions CI and adds WP.org SVN deployment.
+
 ### Phase 9: Configure or pause deployments
 
 Before pushing, clarify the deployment situation to avoid accidentally triggering a deploy to production from an unreviewed state.
@@ -304,7 +306,10 @@ If deployment workflows exist:
     - Via GitHub UI: Settings → Actions → disable the specific workflow, or rename the workflow file to `*.yml.disabled` in a commit.
     - Via `gh`: `gh workflow disable <workflow-name>` — see the `github-cli` skill ([references/actions.md](../github-cli/references/actions.md)) for full `gh workflow` usage.
 
-If no deployment workflow exists yet, this is the time to plan one. Use the `wp-github-deploy` skill for host-specific deployment workflow setup and a drift-detection workflow that surfaces files changed directly on production before a deploy overwrites them.
+If no deployment workflow exists yet, this is the time to plan one:
+
+- **Production site deploying to a web server** — use the `wp-github-deploy` skill for host-specific deployment workflow setup (Kinsta, WP Engine, Pantheon, Pressable, generic SSH) and drift detection.
+- **WordPress plugin deploying to WordPress.org** — use the `wp-github-actions` skill instead. It covers automated WP.org SVN deployment, PHPCS/PHPUnit CI, Composer security scanning, and Playground PR previews — a different concern from server-based rsync deployment.
 
 #### Plugin version monitoring (follow-up)
 

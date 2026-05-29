@@ -85,3 +85,10 @@ Ask for user input when:
 - Tooling changes would create massive style churn.
 - The PHP support matrix or package-manager choice is ambiguous.
 - CI expectations require a stricter or broader toolchain than the local repo currently implies.
+
+## Natural next skills for plugin repos
+
+Once base tooling is in place, consider these for WordPress plugin repos specifically:
+
+- **`wp-github-actions`** — adds full GitHub Actions CI automation: PHPCS/PHPUnit in CI, Composer security scanning, WordPress Playground PR previews, and automated WordPress.org SVN deployment. Pick this up once local tooling is confirmed working and the repo should enforce quality gates on every PR.
+- **`wp-readme-optimizer`** — reviews and rewrites the WordPress.org `readme.txt` for discoverability and quality. Useful if the plugin has or is targeting a WordPress.org listing, after or alongside the tooling pass.
