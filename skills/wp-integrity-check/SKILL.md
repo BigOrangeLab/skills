@@ -23,7 +23,7 @@ Use this skill when:
 - Investigating a suspected compromise or unexplained site behaviour — modified third-party files are a common indicator.
 - A plugin or theme update ran on the server and you want to confirm only expected files changed.
 
-Do NOT use this as a substitute for monitoring — schedule regular runs (see Phase 6) rather than only running reactively.
+Do NOT use this as a substitute for monitoring — schedule regular runs (see Phase 6) rather than only running reactively. For automated version-update tracking (detecting when a newer release is available, not just whether files changed), see the `wp-plugin-version-check` skill.
 
 ## Inputs required
 

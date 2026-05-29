@@ -1,0 +1,266 @@
+name: Plugin Version Check
+
+# Triggered manually. Once the workflow has been tested and produces clean PRs,
+# add a schedule trigger — e.g. '0 9 * * 1' for every Monday at 09:00 UTC.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+
+    env:
+      CACHE_FILE: .github/plugin-versions-cache.json
+      PLUGINS_MD: PLUGINS.md
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ vars.BASE_BRANCH || 'trunk' }}
+          fetch-depth: 0
+
+      # ── SSH setup (shares secrets with deploy + drift-detection workflows) ──
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Trust production host
+        run: ssh-keyscan -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      # ── Collect installed versions from production ────────────────────────
+
+      - name: Fetch plugin list from production via WP-CLI
+        run: |
+          ssh -p ${{ vars.DEPLOY_PORT }} ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} \
+            "wp --path=${{ vars.WP_PATH }} plugin list \
+               --fields=name,version,status --format=json" \
+            > /tmp/production-plugins.json
+
+      # ── Check upstream versions and update cache + PLUGINS.md ─────────────
+
+      - name: Check versions and update cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Uncomment and extend for each premium plugin that needs an API key:
+          # ACF_LICENSE_KEY:           ${{ secrets.ACF_LICENSE_KEY }}
+          # GRAVITY_PERKS_LICENSE_KEY: ${{ secrets.GRAVITY_PERKS_LICENSE_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import json, os, re, urllib.request, urllib.parse
+          from datetime import date
+
+          CACHE_PATH = os.environ['CACHE_FILE']
+          PLUGINS_MD = os.environ['PLUGINS_MD']
+          GH_TOKEN   = os.environ.get('GH_TOKEN', '')
+
+          with open(CACHE_PATH) as f:
+              cache = json.load(f)
+          with open('/tmp/production-plugins.json') as f:
+              production = {p['name']: p for p in json.load(f)}
+
+          updates = []
+
+          for slug, entry in cache['plugins'].items():
+              # Always sync installed version + status from production WP-CLI scan.
+              if slug in production:
+                  entry['installed_version'] = production[slug]['version']
+                  entry['status']            = production[slug]['status']
+
+              latest = None
+              src    = entry.get('source_type')
+
+              # ── wordpress.org ────────────────────────────────────────────────
+              if src == 'wporg':
+                  url = f'https://api.wordpress.org/plugins/info/1.0/{slug}.json'
+                  try:
+                      with urllib.request.urlopen(url, timeout=10) as r:
+                          latest = json.loads(r.read()).get('version')
+                  except Exception as e:
+                      print(f'[warn] {slug}: wp.org API: {e}')
+
+              # ── GitHub releases / tags ───────────────────────────────────────
+              elif src == 'github':
+                  repo  = entry.get('github_repo', '')
+                  strip = entry.get('github_tag_strip', 'v')
+                  hdrs  = {
+                      'Accept':        'application/vnd.github+json',
+                      'Authorization': f'Bearer {GH_TOKEN}',
+                  }
+                  for api_url in [
+                      f'https://api.github.com/repos/{repo}/releases/latest',
+                      f'https://api.github.com/repos/{repo}/tags',
+                  ]:
+                      try:
+                          req = urllib.request.Request(api_url, headers=hdrs)
+                          with urllib.request.urlopen(req, timeout=10) as r:
+                              data = json.loads(r.read())
+                          # releases/latest → dict; tags → list
+                          tag = (data.get('tag_name')
+                                 if isinstance(data, dict)
+                                 else (data[0].get('name') if data else None))
+                          if tag:
+                              latest = tag[len(strip):] if tag.startswith(strip) else tag
+                          break
+                      except Exception as e:
+                          print(f'[warn] {slug}: GitHub API ({api_url}): {e}')
+
+              # ── Premium / SaaS vendor APIs ───────────────────────────────────
+              elif src in ('premium', 'saas'):
+                  api = entry.get('update_api')
+                  if api:
+                      api_type    = api.get('type')
+                      endpoint    = api.get('endpoint', '')
+                      version_key = api.get('version_field', 'new_version')
+                      secret_name = api.get('license_secret', '')
+                      key         = os.environ.get(secret_name, '') if secret_name else ''
+
+                      try:
+                          if api_type == 'edd':
+                              params = urllib.parse.urlencode({
+                                  'edd_action': 'get_version',
+                                  'item_name':  api.get('item_name', ''),
+                                  'license':    key,
+                                  'version':    entry.get('installed_version', ''),
+                                  'url':        '',
+                              })
+                              with urllib.request.urlopen(
+                                      f'{endpoint}?{params}', timeout=10) as r:
+                                  latest = json.loads(r.read()).get(version_key)
+
+                          elif api_type == 'acf_rest':
+                              params  = urllib.parse.urlencode(api.get('params', {}))
+                              url     = f'{endpoint}?{params}' if params else endpoint
+                              req_hdrs = {}
+                              if api.get('license_header') and key:
+                                  req_hdrs[api['license_header']] = key
+                              with urllib.request.urlopen(
+                                      urllib.request.Request(url, headers=req_hdrs),
+                                      timeout=10) as r:
+                                  latest = json.loads(r.read()).get(version_key)
+
+                          elif api_type == 'tgm':
+                              params = urllib.parse.urlencode({
+                                  api.get('action_param',  'action'):             api.get('action', ''),
+                                  api.get('plugin_param',  'tgm-updater-plugin'): api.get('plugin_slug', slug),
+                                  api.get('key_param',     'tgm-updater-key'):    key,
+                              })
+                              with urllib.request.urlopen(
+                                      f'{endpoint}?{params}', timeout=10) as r:
+                                  latest = json.loads(r.read()).get(version_key)
+
+                      except Exception as e:
+                          print(f'[warn] {slug}: vendor API ({api_type}): {e}')
+                          if not key and secret_name:
+                              print(f'[info] {slug}: set secret {secret_name} to enable authenticated check')
+
+              if latest:
+                  entry['latest_version']  = latest
+                  entry['latest_checked']  = str(date.today())
+
+              inst = entry.get('installed_version')
+              lat  = entry.get('latest_version')
+              if inst and lat and inst != lat:
+                  updates.append({
+                      'slug': slug, 'title': entry.get('title', slug),
+                      'installed': inst, 'latest': lat,
+                  })
+
+          # ── Persist updated cache ────────────────────────────────────────────
+          cache['_meta']['generated'] = str(date.today())
+          with open(CACHE_PATH, 'w') as f:
+              json.dump(cache, f, indent=2)
+              f.write('\n')
+
+          # ── Update PLUGINS.md Version column ────────────────────────────────
+          with open(PLUGINS_MD) as f:
+              md = f.read()
+
+          for slug, entry in cache['plugins'].items():
+              ver = entry.get('installed_version')
+              if not ver:
+                  continue
+              # Replace Version cell (3rd column) in any row whose 2nd column is the slug.
+              md = re.sub(
+                  rf'(^\|[^|]+\|\s*{re.escape(slug)}\s*\|)\s*[^|]*(\s*\|)',
+                  rf'\g<1> {ver} \g<2>',
+                  md,
+                  flags=re.MULTILINE,
+              )
+
+          # ── Replace / create ## Available Updates section ────────────────────
+          section = '## Available Updates\n\n'
+          if updates:
+              rows = '\n'.join(
+                  f'| {u["title"]} | `{u["slug"]}` | {u["installed"]} | **{u["latest"]}** |'
+                  for u in updates
+              )
+              section += (
+                  '| Plugin | Slug | Installed | Available |\n'
+                  '|--------|------|-----------|----------|\n'
+                  f'{rows}\n'
+              )
+          else:
+              section += '_All tracked plugins are up to date._\n'
+
+          if '## Available Updates' in md:
+              md = re.sub(
+                  r'## Available Updates\n[\s\S]*?(?=\n##|\Z)',
+                  section,
+                  md,
+              )
+          else:
+              md = md.rstrip('\n') + '\n\n' + section
+
+          with open(PLUGINS_MD, 'w') as f:
+              f.write(md)
+
+          if updates:
+              print(f'\n{len(updates)} update(s) available:')
+              for u in updates:
+                  print(f'  {u["title"]} ({u["slug"]}): {u["installed"]} → {u["latest"]}')
+          else:
+              print('\nAll tracked plugins are up to date.')
+          PYEOF
+
+      # ── Open / update PR if anything changed ─────────────────────────────
+
+      - name: Check for changes
+        id: diff
+        run: |
+          git diff --quiet ${{ env.CACHE_FILE }} ${{ env.PLUGINS_MD }} \
+            && echo "changed=false" >> $GITHUB_OUTPUT \
+            || echo "changed=true"  >> $GITHUB_OUTPUT
+
+      - name: Commit and push to update branch
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B update/plugin-versions
+          git add ${{ env.CACHE_FILE }} ${{ env.PLUGINS_MD }}
+          git commit -m "chore: update plugin versions $(date +%Y-%m-%d)"
+          git push --force origin update/plugin-versions
+
+      - name: Open or update pull request
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BASE="${{ vars.BASE_BRANCH || 'trunk' }}"
+          if gh pr view update/plugin-versions --json state -q '.state' 2>/dev/null \
+               | grep -q OPEN; then
+            echo "PR already open — pushed updated versions to branch."
+          else
+            gh pr create \
+              --base  "$BASE" \
+              --head  update/plugin-versions \
+              --title "chore: update plugin versions $(date +%Y-%m-%d)" \
+              --body  "Automated plugin version check. Review PLUGINS.md diff before merging."
+          fi

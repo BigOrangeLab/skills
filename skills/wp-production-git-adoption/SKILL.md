@@ -171,6 +171,8 @@ For each plugin, fill in:
 
 If the source of a plugin is not recognizable from its slug or title, mark it `unknown ⚠️` and **ask the user** rather than guessing. Do not leave any entry at `unknown ⚠️` permanently — it may indicate an unlicensed premium copy or an abandoned fork.
 
+Once PLUGINS.md is committed and Source annotations are complete, the `wp-plugin-version-check` skill can automate version tracking going forward.
+
 ### Phase 4: Review and update ignore rules
 
 Check `.gitignore` for WordPress-specific omissions and `.deployignore` for dev-only files that should never be deployed. See [references/ignore-templates.md](references/ignore-templates.md) for both templates and the `git rm --cached` commands to unstage newly-ignored files.
@@ -301,6 +303,10 @@ If deployment workflows exist:
   - Via `gh`: `gh workflow disable <workflow-name>` — see the `github-cli` skill ([references/actions.md](../github-cli/references/actions.md)) for full `gh workflow` usage.
 
 If no deployment workflow exists yet, this is the time to plan one. Use the `wp-github-deploy` skill for host-specific deployment workflow setup and a drift-detection workflow that surfaces files changed directly on production before a deploy overwrites them.
+
+#### Plugin version monitoring (follow-up)
+
+After the production state is committed and pushed, consider setting up the `wp-plugin-version-check` skill. It adds a workflow that detects when plugins are updated on the server, checks wordpress.org and GitHub for newer versions, queries premium vendor APIs where possible, and opens a PR updating PLUGINS.md automatically. It is independent of the deployment workflow and can be added at any point after PLUGINS.md exists.
 
 #### Branch protection (human action required)
 
