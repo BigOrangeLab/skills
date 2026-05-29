@@ -23,6 +23,7 @@ Utility skills (cross-project):
 - `local-wp-db` for querying Local by WPEngine site databases on macOS
 - `terminus-wp-cli` for WP-CLI on Pantheon environments via Terminus
 - `wp-admin-ui` for building or extending WordPress admin screens (legacy PHP or React/DataViews)
+- `specification-website` (`vendor/specification-website/`) for querying The Website Specification — use when asked what a site should have, whether something is required, how to audit a URL, or anything about web best practice backed by primary standards (WHATWG, W3C, IETF, WCAG)
 
 ## Skill file format
 

@@ -5,10 +5,11 @@ A shared repository of AI agent skills for use across projects. Skills teach AI 
 ## Structure
 
 ```text
-skills/         — Custom skills authored here
-vendor/         — External skill collections (git submodules)
-  wordpress/    — https://github.com/WordPress/agent-skills
-  jdevalk/      — https://github.com/jdevalk/skills
+skills/                    — Custom skills authored here
+vendor/                    — External skills (submodules and single-file copies)
+  wordpress/               — https://github.com/WordPress/agent-skills (submodule, branch: trunk)
+  jdevalk/                 — https://github.com/jdevalk/skills (submodule, branch: main)
+  specification-website/   — single SKILL.md copied from https://github.com/jdevalk/specification.website
 ```
 
 ## Skill Format
@@ -81,6 +82,17 @@ Upstream skills from [WordPress/agent-skills](https://github.com/WordPress/agent
 ### jdevalk skills (`vendor/jdevalk/`)
 
 Skills from [jdevalk/skills](https://github.com/jdevalk/skills). Covers GitHub presence auditing, WordPress/Astro/EmDash CI/CD, WordPress.org plugin page optimisation, static-site SEO, readability checking, and static WordPress cloning. See that repo's README for the full list.
+
+### specification-website (`vendor/specification-website/`)
+
+A single `SKILL.md` copied from [jdevalk/specification.website](https://github.com/jdevalk/specification.website) at `public/.well-known/agent-skills/specification-website/SKILL.md`. The source repo is a website, not a skills collection, so only the skill file is vendored rather than adding a full submodule.
+
+To update: re-run the fetch command and commit the result.
+
+```bash
+gh api repos/jdevalk/specification.website/contents/public/.well-known/agent-skills/specification-website/SKILL.md \
+  --jq '.content' | base64 -d > vendor/specification-website/SKILL.md
+```
 
 ---
 
