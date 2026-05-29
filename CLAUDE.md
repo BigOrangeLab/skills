@@ -12,7 +12,8 @@ Current custom WordPress client-repo skills:
 - `wp-client-repo-setup` for adding or normalizing Composer and NPM tooling in existing repos
 - `wp-client-repo-review` for security and best-practice review passes on existing repos
 - `wp-production-git-adoption` for connecting an existing production site to GitHub for the first time, or re-aligning a diverged local snapshot to its remote
-- `wp-github-deploy` for setting up GitHub Actions deployment workflows and drift-detection for WordPress sites (Kinsta, WP Engine, Pantheon, generic SSH)
+- `wp-github-deploy` for setting up GitHub Actions deployment workflows and drift-detection for WordPress sites (Kinsta, WP Engine, Pantheon, Pressable, generic SSH)
+- `wp-integrity-check` for auditing a WordPress site's plugins, themes, and core for unexpected modifications using checksums and upstream comparisons
 - `skill-freshness-remediation` for refreshing stale skills while preserving older-version guidance that still matters
 
 Utility skills (cross-project):

@@ -287,6 +287,8 @@ When drift is detected, the workflow opens a `production-drift` GitHub issue (or
 
 Run this workflow before any significant deployment to production, especially when you know or suspect someone has edited files directly on the server.
 
+For a deeper audit — verifying plugin and core files against official checksums rather than just against the repo — see the `wp-integrity-check` skill, which can add a checksum-verification step to this workflow.
+
 ### Phase 5: Branch protection (human action required)
 
 Raise this with the user and require a conscious decision before closing the session:

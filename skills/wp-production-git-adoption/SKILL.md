@@ -313,6 +313,10 @@ Raise this explicitly with the user and require a conscious yes/no answer — do
 
 A conscious "no" or "later" is acceptable. An unreviewed skip is not.
 
+#### Integrity baseline (follow-up)
+
+Once the production state is committed and pushed, run the `wp-integrity-check` skill to verify all third-party plugins, themes, and core against their official checksums and generate baseline snapshots for premium plugins. This is especially important for sites that have been running without version control — modified third-party files are a common indicator of previous compromise or untracked customisation.
+
 ## Verification
 
 - `git status` shows a clean working tree.
