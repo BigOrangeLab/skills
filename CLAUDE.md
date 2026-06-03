@@ -16,6 +16,7 @@ Current custom WordPress client-repo skills (canonical list with version badges 
 - `wp-integrity-check` for auditing a WordPress site's plugins, themes, and core for unexpected modifications using checksums and upstream comparisons
 - `wp-plugin-version-check` for automated plugin version tracking via a scheduled GitHub Actions workflow that opens PRs when installed versions fall behind upstream
 - `skill-freshness-remediation` for refreshing stale skills while preserving older-version guidance that still matters
+- `newspack` for building, configuring, and maintaining Newspack-powered WordPress news sites (onboarding, themes, revenue, engagement, analytics, optimization)
 
 Utility skills (cross-project):
 
