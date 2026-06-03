@@ -109,7 +109,7 @@ Full onboarding is a collaborative process with a Newspack Technical Account Man
 
 #### 1. Domain transfer
 
-Transfer the domain registration to WordPress.com (registration only — not content). See [references/onboarding-domain.md](references/onboarding-domain.md) for the full step-by-step.
+Transfer the domain registration to WordPress.com (registration only — not content). See [references/optimization-onboarding.md](references/optimization-onboarding.md#2-domain-transfer-procedure) for the full step-by-step.
 
 Key prerequisites before initiating:
 
@@ -126,7 +126,7 @@ Install Jetpack on the existing WordPress site (not the new Newspack site), conn
 
 #### 3. Data migration preparation
 
-Export non-WordPress content as structured CSV files. Two files are required:
+Export non-WordPress content as structured CSV files. Two files are required: see [references/optimization-onboarding.md](references/optimization-onboarding.md#csv-data-migration) for field validation rules and format requirements.
 
 - `posts.csv` — required fields: GUID, Post Title, Post Body, Publish Date. Post Body accepts only `<p>`, `<b>`, `<i>` HTML tags.
 - `users.csv` — required fields: GUID, Email Address. Username must be alphanumeric only (A-Z, 0-9).
@@ -208,7 +208,7 @@ Migration from Co-Authors Plus Guest Author records to Guest Contributor users m
 
 #### Federated sites
 
-See [references/federated-sites.md](references/federated-sites.md) for Multibranded Site and Newspack Network configuration. Key behavioral constraints:
+See [references/publishing-appearance.md](references/publishing-appearance.md#5-federated-sites) for Multibranded Site and Newspack Network configuration. Key behavioral constraints:
 
 - The site homepage always shows the default brand regardless of content brand assignments.
 - Editorial users (authors, editors, admins) are NOT auto-propagated across the Newspack Network — only readers with the `network_reader` role sync automatically.
@@ -223,7 +223,7 @@ _Docs: [help.newspack.com/revenue/advertising/](https://help.newspack.com/revenu
 
 #### Activation
 
-Navigate to `Dashboard > Newspack > Advertising` and activate the Newspack Ads plugin. Select an ad server integration: **Google Ad Manager** (primary, most documented) or **Broadstreet** (alternative for community/local news publishers).
+Navigate to `Dashboard > Newspack > Advertising` and activate the Newspack Ads plugin. Select an ad server integration: **Google Ad Manager** (primary, most documented) or **Broadstreet** (alternative for community/local news publishers). See [references/revenue.md](references/revenue.md#1-advertising-setup) for detailed placement and suppression guidance.
 
 Newspack does not support third-party ad plugins such as Advanced Ads. If a publisher installs one, Newspack support is limited to turning ads off and checking PHP errors — no configuration assistance is provided.
 
@@ -290,7 +290,7 @@ Enter organization details, Salesforce Campaign ID, and donor landing page selec
 
 #### Post-donation/subscription flows
 
-The following sub-topics are documented in [references/reader-revenue.md](references/reader-revenue.md):
+The following sub-topics are documented in [references/revenue.md](references/revenue.md#2-reader-revenue-donations-and-subscriptions):
 
 - Modal checkout flow
 - Subscription confirmation and custom email receipts
@@ -303,7 +303,7 @@ The following sub-topics are documented in [references/reader-revenue.md](refere
 
 ### Engagement: campaigns
 
-_Docs: [help.newspack.com/engagement/campaigns/](https://help.newspack.com/engagement/campaigns/)_
+_Docs: [help.newspack.com/engagement/campaigns/](https://help.newspack.com/engagement/campaigns/) · [references/engagement.md](references/engagement.md#campaigns-and-popups)_
 
 Newspack Campaigns manages calls-to-action (CTAs) displayed as prompts across the site.
 
@@ -399,7 +399,7 @@ All outbound newsletter links automatically receive `utm_campaign`, `utm_source`
 
 ### Engagement: content gating
 
-_Docs: [help.newspack.com/engagement/content-gating/](https://help.newspack.com/engagement/content-gating/)_
+_Docs: [help.newspack.com/engagement/content-gating/](https://help.newspack.com/engagement/content-gating/) · [references/engagement.md](references/engagement.md#content-gating)_
 
 Content gating is built on RAS and requires WooCommerce Memberships and Subscriptions. **Contact the Newspack TAM via Slack (`#newspack-help`) before configuring content gating** to align business model with technical options. WooCommerce Memberships must be configured by the support team — it is not a self-service initial configuration.
 
@@ -658,21 +658,33 @@ ActiveCampaign metadata conflict gotcha: Newspack sends all metadata with an `NP
 
 ## Sub-skills (reference files)
 
-The following reference files should be created in `references/` for detailed procedures too long for this SKILL.md:
+The following reference files provide detailed procedures and configuration guidance for Newspack:
 
-| File                                        | Contents                                                                                                                                                                                                                    |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `references/onboarding-domain.md`           | Full 10-step domain transfer procedure, registrar-specific unlock and auth-code guides, troubleshooting invalid auth codes                                                                                                  |
-| `references/onboarding-jetpack.md`          | Jetpack Complete setup, Jetpack Cloud dashboard features, staging environment creation                                                                                                                                      |
-| `references/onboarding-csv-migration.md`    | Full CSV field schemas for posts and users, fputcsv() example, field validation rules                                                                                                                                       |
-| `references/reader-revenue.md`              | Modal checkout setup, subscription confirmation flow, custom email receipts, gift subscriptions, post-donation flows, manual subscription management, payment retries and expiration                                        |
-| `references/ras-setup.md`                   | Full RAS setup wizard walkthrough, transactional email template reference, advanced settings, Mailchimp vs. ActiveCampaign sync differences                                                                                 |
-| `references/analytics-custom-dimensions.md` | Full parameter-to-dimension mapping table, GA4 Exploration examples for gate and checkout reporting, Data Dashboard setup                                                                                                   |
-| `references/advertising-gam.md`             | GAM account signup guide, global placements configuration, in-content ad insertion, ad block recovery, ad refresh control, tutorial links                                                                                   |
-| `references/federated-sites.md`             | Multibranded site setup (brand creation, post assignment, RSS feeds, widget visibility), Newspack Network setup (hub/node configuration, content distribution, user sync, centralized WooCommerce dashboard)                |
-| `references/content-gating.md`              | Five block pattern configurations, inline vs. overlay display setup, metering configuration, developer hook reference                                                                                                       |
-| `references/listings.md`                    | All four listing types, Curated List block modes, Featured Listings, map setup, Self-Serve Listings WooCommerce configuration                                                                                               |
-| `references/additional-plugins.md`          | Additional Newspack-maintained plugins not in the core suite: migration utilities, membership extensions, editorial specializations (elections, sports), theme customization, third-party integrations, performance helpers |
+| File                                                                           | Contents                                                                                                                                                                   |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [references/optimization-onboarding.md](references/optimization-onboarding.md) | Prelaunch checklist (reCAPTCHA, GAM, Jetpack), domain transfer procedure, and Core Web Vitals optimization.                                                                |
+| [references/publishing-appearance.md](references/publishing-appearance.md)     | Detailed theme customization (Customizer vs. Block Theme), template inventory, and federated/network site configuration.                                                   |
+| [references/revenue.md](references/revenue.md)                                 | Comprehensive advertising setup (GAM/Broadstreet), sponsored content treatment, and reader revenue flows (donations, subscriptions, and checkout).                         |
+| [references/engagement.md](references/engagement.md)                           | Campaign prompt management, newsletter composition and ESP integration, content gating (metering/paywalls), and Reader Activation System (RAS) setup.                      |
+| [references/analytics.md](references/analytics.md)                             | Full GA4 custom event tracking setup, custom dimension mapping, and integration with third-party tools like Metorik and Parse.ly.                                          |
+| [references/additional-plugins.md](references/additional-plugins.md)           | Guidance for Newspack-specific plugins beyond the core suite: migration tools, electoral/sports specializations, and third-party integrations (Salesforce, Hubspot, etc.). |
+
+### Planned reference split-outs (not yet in repo)
+
+If this skill grows, the following reference files are good candidates to split out into dedicated docs. These files do not exist yet (intentionally no links).
+
+| Planned file name                           | Notes / current home                                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `references/onboarding-domain.md`           | Domain transfer guidance lives in `references/optimization-onboarding.md` today.               |
+| `references/onboarding-jetpack.md`          | Jetpack connection guidance lives in `references/optimization-onboarding.md` today.            |
+| `references/onboarding-csv-migration.md`    | CSV migration constraints live in `references/optimization-onboarding.md` today.               |
+| `references/advertising-gam.md`             | GAM setup, placements, and suppression guidance live in `references/revenue.md` today.         |
+| `references/reader-revenue.md`              | Reader revenue donation/subscription guidance lives in `references/revenue.md` today.          |
+| `references/ras-setup.md`                   | RAS setup details live in `references/engagement.md` today.                                    |
+| `references/analytics-custom-dimensions.md` | GA4 custom dimensions and reporting guidance live in `references/analytics.md` today.          |
+| `references/federated-sites.md`             | Federated/Network configuration guidance lives in `references/publishing-appearance.md` today. |
+| `references/content-gating.md`              | Content gating and metering guidance live in `references/engagement.md` today.                 |
+| `references/listings.md`                    | Listings guidance lives in `references/engagement.md` today.                                   |
 
 ---
 
