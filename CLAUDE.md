@@ -17,9 +17,11 @@ Current custom WordPress client-repo skills (canonical list with version badges 
 - `wp-plugin-version-check` for automated plugin version tracking via a scheduled GitHub Actions workflow that opens PRs when installed versions fall behind upstream
 - `skill-freshness-remediation` for refreshing stale skills while preserving older-version guidance that still matters
 - `newspack` for building, configuring, and maintaining Newspack-powered WordPress news sites (onboarding, themes, revenue, engagement, analytics, optimization)
+- `wp-plugin-directory-review` for reviewing a plugin's code against all 18 WordPress.org Plugin Directory Guidelines before submission or when addressing review team feedback
 
 Utility skills (cross-project):
 
+- `content-pull` for fetching all public content from a WordPress site via the REST API and saving it as Markdown, HTML, or Word files
 - `github-cli` for GitHub PR, issue, release, and workflow management from the terminal
 - `local-wp-db` for querying Local by WPEngine site databases on macOS
 - `terminus-wp-cli` for WP-CLI on Pantheon environments via Terminus
@@ -47,3 +49,7 @@ Push depth into `references/*.md`; keep `SKILL.md` concise.
 - To scaffold a new skill: `node vendor/wordpress/shared/scripts/scaffold-skill.mjs <name>`
 - To validate skills: `node vendor/wordpress/eval/harness/run.mjs`
 - Submodule branch is `trunk` — run `git submodule update --remote vendor/wordpress` to pull upstream changes
+
+## Linting
+
+Run `npm run lint` before finishing any task that touches `.md` files. It runs Prettier (formatting) and markdownlint-cli2 (rules) over the whole repo. Fix all errors before considering the task done; the pre-commit hook enforces the same checks and will block commits otherwise.
