@@ -21,6 +21,8 @@ Current custom WordPress client-repo skills (canonical list with version badges 
 
 Utility skills (cross-project):
 
+- `cove` for spinning up and managing local WordPress (and static) dev sites with the Cove CLI (Caddy + FrankenPHP + MariaDB + Mailpit; auto-HTTPS, no Docker)
+- `playground-dev-env` for spinning up disposable local WordPress dev environments with `@wp-playground/cli` (the `start` command; the wp-now replacement) — WASM + SQLite, no Docker
 - `content-pull` for fetching all public content from a WordPress site via the REST API and saving it as Markdown, HTML, or Word files
 - `github-cli` for GitHub PR, issue, release, and workflow management from the terminal
 - `local-wp-db` for querying Local by WPEngine site databases on macOS
