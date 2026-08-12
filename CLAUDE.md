@@ -18,6 +18,7 @@ Current custom WordPress client-repo skills (canonical list with version badges 
 - `skill-freshness-remediation` for refreshing stale skills while preserving older-version guidance that still matters
 - `newspack` for building, configuring, and maintaining Newspack-powered WordPress news sites (onboarding, themes, revenue, engagement, analytics, optimization)
 - `wp-plugin-directory-review` for reviewing a plugin's code against all 18 WordPress.org Plugin Directory Guidelines before submission or when addressing review team feedback
+- `wp-7-1-upgrade` for auditing and updating a codebase for WordPress 7.1 — the always-iframed post editor, removed `@wordpress/components` APIs, moved list-table row headers, jQuery UI 1.14.2, changed filter defaults — and for adopting 7.1's new APIs (SVG icons, tooltips, Abilities filters, responsive and pseudo style states, new block supports)
 
 Utility skills (cross-project):
 
