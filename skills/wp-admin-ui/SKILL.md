@@ -5,11 +5,11 @@ compatibility: "WordPress 7.0+. PHP 7.4+ for legacy screens; Node.js and @wordpr
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.1"
-    written: "2026-05-22"
+    version: "1.2"
+    written: "2026-08-12"
     written_against:
-        wordpress: "7.0"
-        wordpress-components: "33.1.0"
+        wordpress: "7.0.4"
+        wordpress-components: "38.0.0"
 ---
 
 # WordPress Admin UI
@@ -81,7 +81,7 @@ For full class and element reference, see [references/legacy-patterns.md](refere
 
 2. Enqueue the required script handles. Minimum set for most screens:
     - `wp-element` (React + `createRoot`)
-    - `wp-components` + its style handle (delivers the WPDS look)
+    - `wp-components` + its style handle (delivers the WPDS look — see [references/components-version-notes.md](references/components-version-notes.md) for `@wordpress/components` behavior changes since 33.1.0, including the 40px control default and `ExternalLink`'s `rel` handling)
     - `wp-i18n`
     - `wp-data` (if using the datastore)
     - `wp-dataviews` (if displaying list/table UI)

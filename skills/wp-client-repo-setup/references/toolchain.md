@@ -15,6 +15,8 @@ composer require --dev \
   dealerdirect/phpcodesniffer-composer-installer
 ```
 
+**Security:** WPCS 3.4.1 fixes an arbitrary command execution issue in the `WordPress.WP.EnqueuedResourceParameters` sniff, part of the default `WordPress` ruleset this skill scaffolds. Pin `wp-coding-standards/wpcs` to `^3.4.1` (not just `^3.3`) — this matters even for internal repos, since PHPCS is often run against contributor branches or PRs.
+
 Add PHP compatibility checks when the target PHP floor matters:
 
 ```bash
@@ -124,6 +126,10 @@ For projects that must support `@wordpress/scripts` <32 alongside 32+, see [tool
 	}
 }
 ```
+
+### Formatting config detection (`@wordpress/scripts` 32.5+)
+
+`wp-scripts format` and `wp-scripts lint-style` only fall back to the bundled default config when the repo has no config of its own. As of 32.5.0 that detection also covers `.cjs`/`.mjs` stylelint configs, and as of 34.0.0 it covers `prettier.config.mjs` in addition to `.prettierrc*` and `prettier.config.js`. If a repo already has formatting config in one of these files, `wp-scripts` will use it instead of silently applying its bundled default — don't assume the bundled config is in effect without checking for these files first.
 
 ---
 

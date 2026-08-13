@@ -5,13 +5,13 @@ compatibility: "Existing WordPress plugins, themes, mu-plugins, or site repos. R
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.1"
-    written: "2026-05-22"
+    version: "1.2"
+    written: "2026-08-12"
     written_against:
-        wordpress: "7.0"
+        wordpress: "7.0.4"
         phpcs: "3.7.2"
-        wpcs: "3.3.0"
-        wordpress-scripts: "32.2.0"
+        wpcs: "3.4.1"
+        wordpress-scripts: "34.0.0"
 ---
 
 # WordPress Client Repo Setup

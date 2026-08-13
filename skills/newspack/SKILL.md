@@ -5,8 +5,8 @@ compatibility: "Newspack-managed WordPress sites on WordPress.com infrastructure
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.0"
-    written: "2026-06-03"
+    version: "1.1"
+    written: "2026-08-12"
     written_against:
         newspack-plugin: "v6.42.1"
         newspack-blocks: "v4.26.3"
@@ -17,7 +17,7 @@ metadata:
         newspack-listings: "v3.6.1"
         newspack-theme: "v2.22.2"
         newspack-block-theme: "v1.28.1"
-        wordpress: "6.x"
+        wordpress: "7.0.4"
         woocommerce: "10.8.1"
         jetpack: "15.8"
     docs_fetched: "2026-06-03"
