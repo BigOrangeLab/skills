@@ -17,6 +17,7 @@ Current custom WordPress client-repo skills (canonical list with version badges 
 - `wp-plugin-version-check` for automated plugin version tracking via a scheduled GitHub Actions workflow that opens PRs when installed versions fall behind upstream
 - `skill-freshness-remediation` for refreshing stale skills while preserving older-version guidance that still matters
 - `newspack` for building, configuring, and maintaining Newspack-powered WordPress news sites (onboarding, themes, revenue, engagement, analytics, optimization)
+- `wp-importing` for custom one-off data migrations into WordPress (headless CMS exports, legacy databases, CSV/JSON dumps) — source profiling, content-model mapping, idempotent import scripts, `WP_IMPORTING` safety, throttling, media, production runbook
 - `wp-plugin-directory-review` for reviewing a plugin's code against all 18 WordPress.org Plugin Directory Guidelines before submission or when addressing review team feedback
 - `wp-7-1-upgrade` for auditing and updating a codebase for WordPress 7.1 — the always-iframed post editor, removed `@wordpress/components` APIs, moved list-table row headers, jQuery UI 1.14.2, changed filter defaults — and for adopting 7.1's new APIs (SVG icons, tooltips, Abilities filters, responsive and pseudo style states, new block supports)
 
@@ -31,6 +32,8 @@ Utility skills (cross-project):
 - `wp-admin-ui` for building or extending WordPress admin screens (legacy PHP or React/DataViews)
 - `specification-website` (`vendor/specification-website/`) for querying The Website Specification — use when asked what a site should have, whether something is required, how to audit a URL, or anything about web best practice backed by primary standards (WHATWG, W3C, IETF, WCAG)
 - `google-ads-js` for implementing Google Ads JavaScript integrations: gtag.js conversion tracking, remarketing, enhanced conversions, Consent Mode v2, and programmatic campaign management via the Google Ads REST API
+- `harvest-clickup-reconcile` for auditing Harvest time entries against the
+  ClickUp tasks they reference, catching time billed to the wrong client
 
 ## Skill file format
 
