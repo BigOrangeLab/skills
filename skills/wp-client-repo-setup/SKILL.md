@@ -5,7 +5,7 @@ compatibility: "Existing WordPress plugins, themes, mu-plugins, or site repos. R
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.2"
+    version: "1.3"
     written: "2026-08-12"
     written_against:
         wordpress: "7.0.4"
@@ -28,6 +28,7 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 - The dominant file types present: PHP, JS, JSX, CSS, SCSS
 - The preferred package manager if one is already in use: `npm`, `pnpm`, or `yarn`
 - The target PHP support range if PHP compatibility checks matter
+- The stack profile, if the user named one: `phpcs-only`, `phpcs-phpstan`, or `pnpm-first`
 
 ## Procedure
 
@@ -36,12 +37,19 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
     - Reuse the existing package manager and script naming style.
     - Extend existing lint or format scripts rather than replacing them.
 
-2. Add only the tooling that matches the code present.
+2. Select a stack profile before adding any packages.
+    - If the user named a profile, use it.
+    - Otherwise check the repo for profile signals: `phpstan.neon`, `phpstan.neon.dist`, or `phpstan/phpstan` in `composer.json` points to `phpcs-phpstan`; `pnpm-lock.yaml` points to `pnpm-first`. If exactly one profile is signalled, propose it and confirm with the user; if signals conflict, ask.
+    - With no named profile and no signal, use the default path below (steps 3–6 unchanged). Profiles are opt-in; the default never changes because profiles exist.
+    - For `pnpm-first`, confirm `pnpm` is listed in `engines` in `package.json` or configured in `.npmrc` before proceeding. If it is not, stop and ask rather than switching the repo's package manager.
+    - See [references/toolchain.md](references/toolchain.md#stack-profiles) for each profile's package list and config templates. A selected profile replaces steps 3–5 with its own package list; step 6 still applies.
+
+3. Add only the tooling that matches the code present.
     - If PHP exists, prefer Composer-based PHP tooling.
     - If JS, JSX, CSS, or SCSS exists, prefer NPM-based front-end tooling.
     - Do not add NPM to a PHP-only repo unless the task explicitly needs it.
 
-3. For PHP, prefer a minimal WordPress-oriented toolchain.
+4. For PHP, prefer a minimal WordPress-oriented toolchain.
     - Add `squizlabs/php_codesniffer`.
     - Add `wp-coding-standards/wpcs`.
     - Add `dealerdirect/phpcodesniffer-composer-installer`.
@@ -49,13 +57,13 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
     - Add `phpcs.xml.dist` if the repo does not already define a ruleset.
     - See [references/toolchain.md](references/toolchain.md) for the canonical `phpcs.xml.dist` template and `composer.json` script conventions.
 
-4. For JS, JSX, CSS, and SCSS, prefer WordPress-native tooling.
+5. For JS, JSX, CSS, and SCSS, prefer WordPress-native tooling.
     - Add `@wordpress/scripts` for linting and formatting when it fits the project.
     - Add `@wordpress/stylelint-config` when style linting is needed.
     - Use scripts such as `lint:js`, `lint:css`, `format`, and `format:check` only if they fit the repo's conventions.
     - See [references/toolchain.md](references/toolchain.md) for package install commands, script templates, and coexistence notes.
 
-5. Keep adoption incremental.
+6. Keep adoption incremental.
     - Put new dependencies in development-only sections.
     - Avoid broad formatting churn unless the task explicitly asks for normalization.
     - Explain any exclusions or relaxations for legacy code.
@@ -63,6 +71,7 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 ## Verification
 
 - The repo still uses its existing package manager unless a change was explicitly requested.
+- When a profile was used, the final summary names it and why it was selected; the tooling added matches that profile's package list and nothing more.
 - Composer and NPM config changes are minimal and development-only.
 - Added scripts execute successfully or fail only on genuine code issues.
 - Lint or format commands match the file types actually present in the repo.
@@ -76,6 +85,9 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 - Introducing NPM to a PHP-only legacy repo for no real gain
 - Running a repo-wide formatter on untouched legacy code without approval
 - Enabling PHP compatibility rules without confirming the target PHP range
+- Applying a profile from a weak or conflicting signal instead of confirming it, or treating a profile as the new default
+- Running `pnpm-first` on a repo that has not opted into pnpm via `engines` or `.npmrc`
+- Raising the PHPStan level until the build fails on existing code, instead of starting low or recording a baseline
 
 ## Escalation
 
@@ -84,6 +96,7 @@ Ask for user input when:
 - The repo already has a strongly opinionated standards stack and the desired outcome is unclear.
 - Tooling changes would create massive style churn.
 - The PHP support matrix or package-manager choice is ambiguous.
+- Repo signals point at more than one stack profile, or the requested profile conflicts with what the repo already uses.
 - CI expectations require a stricter or broader toolchain than the local repo currently implies.
 
 ## Natural next skills for plugin repos
