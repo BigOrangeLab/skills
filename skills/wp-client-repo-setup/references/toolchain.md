@@ -137,11 +137,11 @@ For projects that must support `@wordpress/scripts` <32 alongside 32+, see [tool
 
 Profiles are opt-in (see step 2 of the procedure). With no profile selected, the PHP and JS/CSS sections above are the default path and apply unchanged.
 
-| Profile         | PHP tooling          | JS/CSS tooling                | Pick when                                                                                     |
-| --------------- | -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
-| `phpcs-only`    | WPCS/PHPCS           | none                          | The team wants PHP standards only, even though the repo ships JS or CSS                       |
-| `phpcs-phpstan` | WPCS/PHPCS + PHPStan | none                          | The repo wants static analysis, or already has `phpstan.neon(.dist)` or `phpstan/phpstan`     |
-| `pnpm-first`    | WPCS/PHPCS           | `@wordpress/scripts` via pnpm | The repo has opted into pnpm (`engines.pnpm` in `package.json`, or pnpm settings in `.npmrc`) |
+| Profile         | PHP tooling          | JS/CSS tooling                | Pick when                                                                                                         |
+| --------------- | -------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `phpcs-only`    | WPCS/PHPCS           | none                          | The team wants PHP standards only, even though the repo ships JS or CSS                                           |
+| `phpcs-phpstan` | WPCS/PHPCS + PHPStan | none                          | The repo wants static analysis, or already has `phpstan.neon(.dist)` or `phpstan/phpstan`                         |
+| `pnpm-first`    | WPCS/PHPCS           | `@wordpress/scripts` via pnpm | The repo has opted into pnpm (`packageManager` or `engines.pnpm` in `package.json`, or pnpm settings in `.npmrc`) |
 
 Every profile uses the [required Composer packages](#required-packages), the [`phpcs.xml.dist` template](#minimum-phpcsxmldist-template), and the [Composer scripts](#composer-scripts) above. Add `phpcompatibility/phpcompatibility-wp` under the same conditions as the default path.
 
@@ -198,9 +198,10 @@ Add an analysis script alongside the PHPCS scripts. The WordPress stubs are larg
 
 ### `pnpm-first`
 
-Confirm the repo has opted into pnpm before adding anything. Either check must pass; if neither does, stop and ask rather than switching package managers:
+Confirm the repo has opted into pnpm before adding anything. Any one check must pass; if none does, stop and ask rather than switching package managers:
 
 ```bash
+node -p "require('./package.json').packageManager ?? 'not set'"   # e.g. pnpm@10.x (corepack)
 node -p "require('./package.json').engines?.pnpm ?? 'not set'"
 cat .npmrc
 ```
@@ -230,4 +231,4 @@ Use the [`package.json` scripts](#packagejson-scripts) from the JS/CSS section u
 
 - If the repo already uses a different PHPCS ruleset (`phpcs.xml` without `.dist`), extend it rather than replacing it.
 - If a prettier or ESLint config already exists, check for conflicts before adding `@wordpress/scripts` — its bundled ESLint config may clash with existing rules.
-- For `pnpm` repos, use the [`pnpm-first` profile](#pnpm-first): replace `npm install` with `pnpm add` and confirm `pnpm` is listed in `engines` or `.npmrc`.
+- For `pnpm` repos, use the [`pnpm-first` profile](#pnpm-first): replace `npm install` with `pnpm add` and confirm the repo has opted into pnpm via `packageManager`, `engines`, or `.npmrc`.

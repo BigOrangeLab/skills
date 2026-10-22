@@ -41,8 +41,8 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
     - If the user named a profile, use it.
     - Otherwise check the repo for profile signals: `phpstan.neon`, `phpstan.neon.dist`, or `phpstan/phpstan` in `composer.json` points to `phpcs-phpstan`; `pnpm-lock.yaml` points to `pnpm-first`. If exactly one profile is signalled, propose it and confirm with the user; if signals conflict, ask.
     - With no named profile and no signal, use the default path below (steps 3–6 unchanged). Profiles are opt-in; the default never changes because profiles exist.
-    - For `pnpm-first`, confirm `pnpm` is listed in `engines` in `package.json` or configured in `.npmrc` before proceeding. If it is not, stop and ask rather than switching the repo's package manager.
-    - See [references/toolchain.md](references/toolchain.md#stack-profiles) for each profile's package list and config templates. A selected profile replaces steps 3–5 with its own package list; step 6 still applies.
+    - For `pnpm-first`, confirm the repo has opted into pnpm — a `packageManager` field naming `pnpm`, `pnpm` in `engines` in `package.json`, or pnpm settings in `.npmrc` — before proceeding. If it has not, stop and ask rather than switching the repo's package manager.
+    - See [references/toolchain.md](references/toolchain.md#stack-profiles) for each profile's package list and config templates. A selected profile's package list replaces steps 3–5, including step 3's file-type rule (for example, `phpcs-only` deliberately adds no JS tooling even when JS is present); step 6 still applies.
 
 3. Add only the tooling that matches the code present.
     - If PHP exists, prefer Composer-based PHP tooling.
@@ -86,7 +86,7 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 - Running a repo-wide formatter on untouched legacy code without approval
 - Enabling PHP compatibility rules without confirming the target PHP range
 - Applying a profile from a weak or conflicting signal instead of confirming it, or treating a profile as the new default
-- Running `pnpm-first` on a repo that has not opted into pnpm via `engines` or `.npmrc`
+- Running `pnpm-first` on a repo that has not opted into pnpm via `packageManager`, `engines`, or `.npmrc`
 - Raising the PHPStan level until the build fails on existing code, instead of starting low or recording a baseline
 
 ## Escalation
