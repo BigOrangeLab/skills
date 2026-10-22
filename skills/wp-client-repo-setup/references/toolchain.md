@@ -133,8 +133,102 @@ For projects that must support `@wordpress/scripts` <32 alongside 32+, see [tool
 
 ---
 
+## Stack profiles
+
+Profiles are opt-in (see step 2 of the procedure). With no profile selected, the PHP and JS/CSS sections above are the default path and apply unchanged.
+
+| Profile         | PHP tooling          | JS/CSS tooling                | Pick when                                                                                                         |
+| --------------- | -------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `phpcs-only`    | WPCS/PHPCS           | none                          | The team wants PHP standards only, even though the repo ships JS or CSS                                           |
+| `phpcs-phpstan` | WPCS/PHPCS + PHPStan | none                          | The repo wants static analysis, or already has `phpstan.neon(.dist)` or `phpstan/phpstan`                         |
+| `pnpm-first`    | WPCS/PHPCS           | `@wordpress/scripts` via pnpm | The repo has opted into pnpm (`packageManager` or `engines.pnpm` in `package.json`, or pnpm settings in `.npmrc`) |
+
+Every profile uses the [required Composer packages](#required-packages), the [`phpcs.xml.dist` template](#minimum-phpcsxmldist-template), and the [Composer scripts](#composer-scripts) above. Add `phpcompatibility/phpcompatibility-wp` under the same conditions as the default path.
+
+### `phpcs-only`
+
+No `package.json` changes, even when JS or CSS files are present. PHPCS 3 also scans `.js` and `.css` files by default, so restrict it to PHP in `phpcs.xml.dist` or it will report on the front-end files this profile deliberately leaves alone:
+
+```xml
+<arg name="extensions" value="php"/>
+```
+
+List the front-end files left unlinted in the final summary so the omission is a recorded decision, not an oversight.
+
+### `phpcs-phpstan`
+
+Everything in `phpcs-only` (including the `extensions` argument), plus PHPStan with WordPress stubs. Allow the extension installer plugin first so Composer does not block it in non-interactive runs:
+
+```bash
+composer config allow-plugins.phpstan/extension-installer true
+composer require --dev \
+  phpstan/phpstan \
+  phpstan/extension-installer \
+  szepeviktor/phpstan-wordpress
+```
+
+`szepeviktor/phpstan-wordpress` 2.x requires PHPStan 2.x and pulls in `php-stubs/wordpress-stubs`; `phpstan/extension-installer` registers it automatically, so no `includes:` entry is needed for it.
+
+Minimum `phpstan.neon.dist`:
+
+```neon
+parameters:
+	level: 5
+	paths:
+		- .
+	excludePaths:
+		- vendor
+		- node_modules (?)
+```
+
+- Narrow `paths` to the plugin or theme source directories when the repo root holds more than code.
+- The `(?)` suffix marks an exclude path as optional. Without it PHPStan 2 errors when the directory does not exist, which is the normal state for `node_modules` in a repo with no JS tooling.
+- Set `phpVersion` (for example `phpVersion: 70400`) to the repo's minimum supported PHP version when it is below the PHP that runs the analysis.
+- On legacy code, keep adoption incremental: start at a level the code already passes, or record the existing errors with `vendor/bin/phpstan analyse --generate-baseline` and add `includes: [phpstan-baseline.neon]`, rather than raising the level until the build fails.
+
+Add an analysis script alongside the PHPCS scripts. The WordPress stubs are large, so raise PHPStan's default memory limit:
+
+```json
+"scripts": {
+    "lint": "phpcs",
+    "lint:fix": "phpcbf",
+    "analyse": "phpstan analyse --memory-limit=1G"
+}
+```
+
+### `pnpm-first`
+
+Confirm the repo has opted into pnpm before adding anything. Any one check must pass; if none does, stop and ask rather than switching package managers:
+
+```bash
+node -p "require('./package.json').packageManager ?? 'not set'"   # e.g. pnpm@10.x (corepack)
+node -p "require('./package.json').engines?.pnpm ?? 'not set'"
+cat .npmrc
+```
+
+Install with pnpm and keep `pnpm-lock.yaml` as the only lockfile. Do not create a `package-lock.json`:
+
+```bash
+pnpm add --save-dev @wordpress/scripts
+pnpm add --save-dev @wordpress/stylelint-config   # only when CSS or SCSS is present
+```
+
+Use the [`package.json` scripts](#packagejson-scripts) from the JS/CSS section unchanged and run them with `pnpm run <script>`. CI should install with `pnpm install --frozen-lockfile`.
+
+- `wp-scripts format` formats `.yml`/`.yaml` files, so it rewrites `pnpm-lock.yaml` unless that file is ignored. Add it to the project's `.prettierignore`. A project `.prettierignore` replaces the bundled one (which ignores `build` and `vendor`), so list those too:
+
+    ```text
+    build
+    vendor
+    pnpm-lock.yaml
+    ```
+
+- pnpm 10 skips dependency build scripts by default and prints an `approve-builds` notice after installing `@wordpress/scripts`. `wp-scripts lint-js`, `lint-style`, and `format` work without approving them, so do not approve builds just to silence the notice.
+
+---
+
 ## Notes on coexistence
 
 - If the repo already uses a different PHPCS ruleset (`phpcs.xml` without `.dist`), extend it rather than replacing it.
 - If a prettier or ESLint config already exists, check for conflicts before adding `@wordpress/scripts` — its bundled ESLint config may clash with existing rules.
-- For `pnpm` repos, replace `npm install` with `pnpm add` and confirm `pnpm` is listed in `engines` or `.npmrc`.
+- For `pnpm` repos, use the [`pnpm-first` profile](#pnpm-first): replace `npm install` with `pnpm add` and confirm the repo has opted into pnpm via `packageManager`, `engines`, or `.npmrc`.
