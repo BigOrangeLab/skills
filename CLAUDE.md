@@ -20,6 +20,7 @@ Current custom WordPress client-repo skills (canonical list with version badges 
 - `wp-importing` for custom one-off data migrations into WordPress (headless CMS exports, legacy databases, CSV/JSON dumps) — source profiling, content-model mapping, idempotent import scripts, `WP_IMPORTING` safety, throttling, media, production runbook
 - `wp-plugin-directory-review` for reviewing a plugin's code against all 18 WordPress.org Plugin Directory Guidelines before submission or when addressing review team feedback
 - `wp-7-1-upgrade` for auditing and updating a codebase for WordPress 7.1 — the always-iframed post editor, removed `@wordpress/components` APIs, moved list-table row headers, jQuery UI 1.14.2, changed filter defaults — and for adopting 7.1's new APIs (SVG icons, tooltips, Abilities filters, responsive and pseudo style states, new block supports)
+- `wp-7-2-upgrade` for preparing a codebase for WordPress 7.2 (pre-release, verified against Beta 1) — retired script/style concatenation and the 410 `load-scripts.php`, `wp_kses()` on the HTML API, SVG admin menu and toolbar icons, local `WP_DEBUG` default, removed Interactivity API directives — and for adopting the Secrets API, entity fields/actions registries, and `data-wp-html`
 - `enfold-alb` for the Enfold theme's Avia Advanced Layout Builder — shortcode element catalog, nesting rules, ALB post meta, custom elements, Custom Element Templates, dynamic content, and the classic/block editor switch
 
 Utility skills (cross-project):
