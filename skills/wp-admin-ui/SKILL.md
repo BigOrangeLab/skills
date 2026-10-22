@@ -5,11 +5,11 @@ compatibility: "WordPress 7.0+. PHP 7.4+ for legacy screens; Node.js and @wordpr
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.2"
-    written: "2026-08-12"
+    version: "1.3"
+    written: "2026-10-22"
     written_against:
         wordpress: "7.0.4"
-        wordpress-components: "38.0.0"
+        wordpress-components: "43.0.0"
 ---
 
 # WordPress Admin UI
@@ -81,7 +81,7 @@ For full class and element reference, see [references/legacy-patterns.md](refere
 
 2. Enqueue the required script handles. Minimum set for most screens:
     - `wp-element` (React + `createRoot`)
-    - `wp-components` + its style handle (delivers the WPDS look — see [references/components-version-notes.md](references/components-version-notes.md) for `@wordpress/components` behavior changes since 33.1.0, including the 40px control default and `ExternalLink`'s `rel` handling)
+    - `wp-components` + its style handle (delivers the WPDS look — see [references/components-version-notes.md](references/components-version-notes.md) for `@wordpress/components` behavior changes since 33.1.0, including the 40px control default, `ExternalLink`'s `rel` handling, React 19, and components deprecated for removal in WordPress 7.4)
     - `wp-i18n`
     - `wp-data` (if using the datastore)
     - `wp-dataviews` (if displaying list/table UI)
@@ -179,6 +179,6 @@ When `/*rtl:*/` comment overrides are unavoidable, model them on the existing pa
 
 - If a required component or token is missing from `@wordpress/components`, raise it upstream in the Gutenberg repo rather than creating a local workaround.
 - For design decisions (layout, spacing, interaction patterns), consult the Figma WordPress Design System library before implementing.
-- New screens should align with the `@wordpress/ui` package direction — components in `@wordpress/components` are progressively migrating toward `@wordpress/ui` design tokens and visual patterns.
+- New screens should align with the `@wordpress/ui` package direction — components in `@wordpress/components` are progressively migrating toward `@wordpress/ui` design tokens and visual patterns. As of `@wordpress/components` 42, `SelectControl`, `CheckboxControl`, `RadioControl`, `ToggleControl`, and `Notice` are marked not recommended in favor of `@wordpress/ui` equivalents. `@wordpress/ui` has no core script handle and must be bundled, so decide per screen whether that weight is worth it (see [references/components-version-notes.md](references/components-version-notes.md)).
 - Storybook (living component docs): [Gutenberg Storybook](https://wordpress.github.io/gutenberg/)
 - Figma: [WordPress Design System](https://www.figma.com/design/804HN2REV2iap2ytjRQ055/WordPress-Design-System)
