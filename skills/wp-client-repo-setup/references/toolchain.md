@@ -68,6 +68,18 @@ Set `testVersion` to match the project's minimum supported PHP version (WordPres
 
 ## JS/CSS toolchain (npm / pnpm)
 
+### Node.js version and which major to install
+
+Check the Node.js version the repo and its CI actually run (`node --version`, `.nvmrc`, `.node-version`, `engines.node`, CI `setup-node`) before installing. Recent `@wordpress/scripts` majors raised the floor:
+
+| `@wordpress/scripts` | `engines.node`                     | Bundled Prettier / Stylelint |
+| -------------------- | ---------------------------------- | ---------------------------- |
+| 36.x–37.x (current)  | `^22.22.2 \|\| ^24.15.0 \|\| >=26` | wp-prettier 3.9.6 / 17       |
+| 35.x                 | `^20.19.0 \|\| >=22.13.0`          | wp-prettier 3.0.3 / 17       |
+| 34.x                 | `>=18.12.0`                        | wp-prettier 3.0.3 / 16       |
+
+If the repo's Node does not satisfy the current major, pin the newest major it does satisfy (for example `npm install --save-dev @wordpress/scripts@^35`) rather than bumping the repo's Node version as a side effect of a tooling pass. Raise the Node upgrade separately.
+
 ### Required package
 
 ```bash
@@ -80,6 +92,8 @@ Add style linting when CSS or SCSS is present:
 npm install --save-dev @wordpress/stylelint-config
 ```
 
+`@wordpress/stylelint-config` 27 declares `stylelint` `^17.14.1` and `stylelint-scss` `^7.2.0` as peers. `@wordpress/scripts` 36.1+ supplies both; on older majors, or if the install reports an unmet `stylelint-scss` peer, add it as a dev dependency too.
+
 ### `package.json` scripts
 
 ```json
@@ -87,11 +101,30 @@ npm install --save-dev @wordpress/stylelint-config
     "lint:js": "wp-scripts lint-js",
     "lint:css": "wp-scripts lint-style",
     "format": "wp-scripts format",
-    "format:check": "wp-scripts format --check"
+    "format:check": "prettier --check \"**/*.{cjs,cts,js,json,jsx,mjs,mts,ts,tsx,yml,yaml}\""
 }
 ```
 
 Use the scripts that match file types actually present — do not add `lint:css` to a JS-only repo.
+
+### Format checking (`format:check`)
+
+`wp-scripts format` always runs Prettier with `--write` and does not forward `--check` (verified in 34.0.0 and 37.0.0). A `"format:check": "wp-scripts format --check"` script therefore **rewrites files and exits 0** — it can never fail CI. If an existing repo has that script, replace it.
+
+Run Prettier directly for the check, against the same config and file types that `wp-scripts format` uses:
+
+```bash
+npm install --save-dev "prettier@npm:wp-prettier@^3.9.6" @wordpress/prettier-config
+```
+
+- Add `"prettier": "@wordpress/prettier-config"` to `package.json` (or keep an existing Prettier config). `wp-scripts format` detects that key and uses it, so both commands share one config. Without a project config, bare `prettier` would fall back to Prettier's defaults, not WordPress style.
+- Match the `wp-prettier` version to the one the installed `@wordpress/scripts` bundles (3.9.6 for 36+, 3.0.3 for 34–35) so both commands produce identical output.
+- Add a `.prettierignore` listing `build` and `vendor` (plus `pnpm-lock.yaml` for pnpm repos). `wp-scripts format` falls back to a bundled ignore file; bare `prettier` does not.
+- Keep the extension glob above. `wp-scripts format` only formats those extensions, while `prettier --check .` would also flag CSS, SCSS, and Markdown that `format` never fixes. On `@wordpress/scripts` < 36, which does not format `.cjs`/`.mjs`/`.cts`/`.mts`, drop those four from the glob.
+
+### Upgrading `@wordpress/scripts` across 36.0.0
+
+36.0.0 moved the bundled Prettier from wp-prettier 3.0.3 to 3.9.6, so `wp-scripts format` output changes on code that was already formatted. When bumping an existing repo past 35.x, run `format:check` first and report the scope of the reformat; commit any reformatting separately from the version bump, and only with approval for a repo-wide change.
 
 ### ESLint configuration (`@wordpress/scripts` 32+)
 
@@ -114,7 +147,9 @@ If the repo has an existing `.eslintrc.js` or `.eslintrc.cjs`, migrate it — `w
 
 For projects that must support `@wordpress/scripts` <32 alongside 32+, see [toolchain-legacy.md](toolchain-legacy.md).
 
-### `.stylelintrc.json` (when needed)
+### `.stylelintrc.json`
+
+Commit a project `.stylelintrc.json` whenever you add `lint:css`. As of `@wordpress/scripts` 36.0.0, `lint-style` finds config with Stylelint's own resolver, which also searches **ancestor directories and `~/.config/stylelint`**. A repo with no local config can silently pick up an unrelated config from a parent folder or a developer's home directory instead of the bundled default, so lint results differ between machines and CI.
 
 `@wordpress/scripts` 30+ uses `@wordpress/stylelint-config/scss-stylistic` as its default (includes stylistic rules). Stylistic rule overrides now use the `@stylistic/` prefix:
 
@@ -223,6 +258,8 @@ Use the [`package.json` scripts](#packagejson-scripts) from the JS/CSS section u
     pnpm-lock.yaml
     ```
 
+- `prettier` and `@wordpress/prettier-config` from [Format checking](#format-checking-formatcheck) must be direct dev dependencies here: pnpm does not hoist `@wordpress/scripts`' copy, so a bare `prettier` call would not resolve otherwise.
+- Before `@wordpress/scripts` 36.1.0, `build` and `start` could fail to find the default browserslist config when dependencies are not hoisted (pnpm, or npm with `install-strategy=linked`). The lint and format scripts above are unaffected; if the repo also builds with `wp-scripts`, use 36.1.0 or later.
 - pnpm 10 skips dependency build scripts by default and prints an `approve-builds` notice after installing `@wordpress/scripts`. `wp-scripts lint-js`, `lint-style`, and `format` work without approving them, so do not approve builds just to silence the notice.
 
 ---

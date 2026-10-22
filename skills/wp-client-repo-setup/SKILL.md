@@ -5,13 +5,13 @@ compatibility: "Existing WordPress plugins, themes, mu-plugins, or site repos. R
 license: MIT
 metadata:
     author: georgestephanis
-    version: "1.3"
-    written: "2026-08-12"
+    version: "1.4"
+    written: "2026-10-22"
     written_against:
         wordpress: "7.0.4"
         phpcs: "3.7.2"
         wpcs: "3.4.1"
-        wordpress-scripts: "34.0.0"
+        wordpress-scripts: "37.0.0"
 ---
 
 # WordPress Client Repo Setup
@@ -58,9 +58,10 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
     - See [references/toolchain.md](references/toolchain.md) for the canonical `phpcs.xml.dist` template and `composer.json` script conventions.
 
 5. For JS, JSX, CSS, and SCSS, prefer WordPress-native tooling.
+    - Check the repo's Node.js version first. `@wordpress/scripts` 36+ requires Node `^22.22.2 || ^24.15.0 || >=26`; if the repo cannot meet that, pin the newest major it does support instead of bumping Node.
     - Add `@wordpress/scripts` for linting and formatting when it fits the project.
-    - Add `@wordpress/stylelint-config` when style linting is needed.
-    - Use scripts such as `lint:js`, `lint:css`, `format`, and `format:check` only if they fit the repo's conventions.
+    - Add `@wordpress/stylelint-config` when style linting is needed, and commit a project `.stylelintrc.json` so `lint-style` does not resolve a config from a parent directory or `~/.config/stylelint`.
+    - Use scripts such as `lint:js`, `lint:css`, `format`, and `format:check` only if they fit the repo's conventions. `wp-scripts format --check` does **not** check: it rewrites files and exits 0. Build `format:check` on `prettier --check` as shown in the reference.
     - See [references/toolchain.md](references/toolchain.md) for package install commands, script templates, and coexistence notes.
 
 6. Keep adoption incremental.
@@ -74,6 +75,7 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 - When a profile was used, the final summary names it and why it was selected; the tooling added matches that profile's package list and nothing more.
 - Composer and NPM config changes are minimal and development-only.
 - Added scripts execute successfully or fail only on genuine code issues.
+- `format:check` exits non-zero on a deliberately misformatted file and leaves that file unchanged.
 - Lint or format commands match the file types actually present in the repo.
 - The final summary explains why each tool was added.
 - A team member can run `composer install && vendor/bin/phpcs` (or the equivalent npm script) from a fresh checkout without additional configuration.
@@ -88,6 +90,8 @@ Use this skill when an existing WordPress plugin, theme, mu-plugin, or site repo
 - Applying a profile from a weak or conflicting signal instead of confirming it, or treating a profile as the new default
 - Running `pnpm-first` on a repo that has not opted into pnpm via `packageManager`, `engines`, or `.npmrc`
 - Raising the PHPStan level until the build fails on existing code, instead of starting low or recording a baseline
+- Using `wp-scripts format --check` as a CI check; it rewrites files and always passes
+- Installing a `@wordpress/scripts` major the repo's Node.js cannot run, or bumping `@wordpress/scripts` past 35.x without warning that the Prettier upgrade reformats existing code
 
 ## Escalation
 
@@ -96,6 +100,7 @@ Ask for user input when:
 - The repo already has a strongly opinionated standards stack and the desired outcome is unclear.
 - Tooling changes would create massive style churn.
 - The PHP support matrix or package-manager choice is ambiguous.
+- The repo's Node.js version is below what current `@wordpress/scripts` requires and nobody has decided whether to pin an older major or upgrade Node.
 - Repo signals point at more than one stack profile, or the requested profile conflicts with what the repo already uses.
 - CI expectations require a stricter or broader toolchain than the local repo currently implies.
 
