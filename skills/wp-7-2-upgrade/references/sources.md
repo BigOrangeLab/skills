@@ -1,19 +1,23 @@
 # WordPress 7.2 — Sources, Status, and Schedule
 
-Researched 22 October 2026, two days after Beta 1. Every "In Beta 1" claim in this skill was checked against `wordpress-develop` trunk at `7.2-beta1-64606` and Gutenberg at the pinned 24.2.0 commit (`7b95ee96b`), not only against announcements. **Update this file at RC1 and at release**, and when the 7.2 Field Guide is published (it doesn't exist yet).
+First researched 22 October 2026 against Beta 1 (`7.2-beta1-64606`, Gutenberg pinned at 24.2.0 `7b95ee96b`). **Refreshed 3 November 2026 against Beta 4** (`wordpress-develop` trunk@65230, Gutenberg pinned at `c035c1a`, the tip of Gutenberg's `wp/7.2` branch). All 98 non-test commits between Beta 1 and Beta 4, and the `wp/7.2` package changelogs, were checked, not only the announcements. The Beta 2 and Beta 4 posts give no detail, and no new dev notes were published in that window. **Update this file at RC1 and at release**, and when the 7.2 Field Guide is published (due with RC1).
 
 ## Schedule
 
-| Milestone                    | Date                          |
-| ---------------------------- | ----------------------------- |
-| Beta 1 (feature freeze)      | 20 October 2026 — released    |
-| RC1 (string and code freeze) | 17 November 2026              |
-| RC2 / RC3                    | 24 November / 1 December 2026 |
-| Final release                | 8 December 2026               |
+| Milestone                    | Date                                                                                                                                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beta 1 (feature freeze)      | 20 October 2026 — released                                                                                                                      |
+| Beta 2                       | 27 October 2026 — released                                                                                                                      |
+| Beta 3                       | 28 October 2026 — released inside the [7.1.4 security release](https://wordpress.org/news/2026/10/wordpress-7-1-4/); no announcement of its own |
+| Beta 4                       | 3 November 2026 — released                                                                                                                      |
+| Beta 5                       | 10 November 2026 (added after Beta 3 was folded into 7.1.4)                                                                                     |
+| RC1 (string and code freeze) | 17 November 2026; Field Guide due                                                                                                               |
+| RC2 / RC3                    | 24 November / 1 December 2026                                                                                                                   |
+| Final release                | 8 December 2026                                                                                                                                 |
 
 Sources: [WordPress 7.2 release page](https://make.wordpress.org/core/7-2/), [release party schedule](https://make.wordpress.org/core/2026/10/06/wordpress-7-2-release-party-schedule/). The [call for volunteers](https://make.wordpress.org/core/2026/08/12/wordpress-7-2-call-for-volunteers/) and [Help Test WordPress 7.2](https://make.wordpress.org/test/2026/10/20/help-test-wordpress-7-2/) posts say 9 December; trust the release page.
 
-Gutenberg range: 7.2 merges Gutenberg **23.7 through 24.2**. More Gutenberg fixes are backported during the beta/RC period.
+Gutenberg range: 7.2 merges Gutenberg **23.7 through 24.3**, delivered through Gutenberg's `wp/7.2` branch, which also carries backports. At Beta 4 the bundled packages include `@wordpress/components` 43, `@wordpress/interactivity` 8.0.0, `@wordpress/icons` 19, and `@wordpress/block-editor` 19, and they need Node ≥ 22.13 to build. Read package changelogs on the [`wp/7.2` branch](https://github.com/WordPress/gutenberg/tree/wp/7.2/packages), not on trunk.
 
 ## Primary sources
 
@@ -34,26 +38,28 @@ Core changesets cited in the references link to `core.trac.wordpress.org/changes
 
 ## Status of roadmap items
 
-### In Beta 1
+### In the beta
 
-Script/style concatenation retired · `wp_kses()` on the HTML API (enabled by default) · Secrets API (no admin UI; CLI stays in the feature plugin) · SVG icons in the admin menu and toolbar · application password created email · `NO_BACKSLASH_ESCAPES` stripped · `WP_DEBUG` local default · "On This Day" and the separate Recent Comments widget · meta box reordering screen option · random content redirects · sitemap XSL removal · entity fields/actions registries · `data-wp-html` · text-shadow and background-clip supports · Ipsum default theme · Gutenberg 23.7–24.2.
+Script/style concatenation retired · `wp_kses()` on the HTML API (enabled by default) · Secrets API (no admin UI; CLI stays in the feature plugin) · SVG icons in the admin menu and toolbar · application password created email · `NO_BACKSLASH_ESCAPES` stripped · `WP_DEBUG` local default · "On This Day" and the separate Recent Comments widget · meta box reordering screen option · random content redirects · sitemap XSL removal · entity fields/actions registries · `data-wp-html` · text-shadow and background-clip supports · Ipsum default theme · Gutenberg 23.7–24.3.
 
-### Roadmap items not in Beta 1
+Added at Beta 2–4: Dashicon → SVG mapping for 99 Dashicons in any admin menu item · toolbar `icon` argument hides legacy Dashicons · SVG icons in At a Glance · DataForm post sidebar stabilized (`PluginPostExcerpt` not rendered) · server-only entity actions and fields · Notes reactions · `data-wp-bind--on*` stripped · `rest_allowed_cors_methods` · REST `data_processing` · revision meta limited to revisioned keys · sitemap 404/200 changes · `wp_random_content_split_the_query()` removed.
+
+### Roadmap items not in the beta
 
 Still possible before RC1 only if they were already in a Gutenberg release that gets backported; otherwise expect 7.3.
 
-| Item                                                                                          | State at Beta 1                                                                        |
-| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Description List block ([gutenberg#4880](https://github.com/WordPress/gutenberg/issues/4880)) | Not in Gutenberg 24.2                                                                  |
-| Table of Contents block made stable                                                           | Still `__experimental` in 24.2                                                         |
-| React 19                                                                                      | Core still bundles React 18.3.1; roadmap: "unlikely to fully land"                     |
-| Sudo mode                                                                                     | Proposal not published                                                                 |
-| Safer `default_role` values ([#46744](https://core.trac.wordpress.org/ticket/46744))          | No commit                                                                              |
-| SameSite cookies ([#37000](https://core.trac.wordpress.org/ticket/37000))                     | No commit                                                                              |
-| Widget accessibility mode removal ([#52399](https://core.trac.wordpress.org/ticket/52399))    | No commit                                                                              |
-| Admin notice accessibility ([#50486](https://core.trac.wordpress.org/ticket/50486))           | Committed, then **reverted** on 14 October                                             |
-| Secrets API admin screen                                                                      | Deferred to 7.3                                                                        |
-| DataForm post inspector                                                                       | Under test in Gutenberg; check the RC before relying on `PluginPostExcerpt` either way |
+| Item                                                                                          | State at Beta 4 (unchanged since Beta 1 unless noted)                                                                                                         |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Description List block ([gutenberg#4880](https://github.com/WordPress/gutenberg/issues/4880)) | Not on `wp/7.2` at Beta 4                                                                                                                                     |
+| Table of Contents block made stable                                                           | Still `__experimental` on `wp/7.2` at Beta 4                                                                                                                  |
+| React 19                                                                                      | Core still bundles React 18.3.1; roadmap: "unlikely to fully land"                                                                                            |
+| Sudo mode                                                                                     | Proposal not published                                                                                                                                        |
+| Safer `default_role` values ([#46744](https://core.trac.wordpress.org/ticket/46744))          | No commit                                                                                                                                                     |
+| SameSite cookies ([#37000](https://core.trac.wordpress.org/ticket/37000))                     | No commit                                                                                                                                                     |
+| Widget accessibility mode removal ([#52399](https://core.trac.wordpress.org/ticket/52399))    | No commit                                                                                                                                                     |
+| Admin notice accessibility ([#50486](https://core.trac.wordpress.org/ticket/50486))           | Committed, then **reverted** on 14 October                                                                                                                    |
+| Secrets API admin screen                                                                      | Deferred to 7.3                                                                                                                                               |
+| DataForm post inspector                                                                       | **Shipped since Beta 2** — see [breaking-changes.md §10](breaking-changes.md#10-post-editor-document-sidebar-is-dataform-pluginpostexcerpt-fills-dont-render) |
 
 ### Not in 7.2
 

@@ -147,6 +147,16 @@ scan "Removed prop: InspectorControls __experimentalGroup" HIGH \
 	'__experimentalGroup' \
 	"$BC §3"
 
+scan "data-wp-bind--on* (stripped from server output; use data-wp-on--)" HIGH \
+	"$CODE" \
+	'data-wp-bind--on' \
+	"$BC §3"
+
+scan "PluginPostExcerpt fill (not rendered by the DataForm post sidebar)" HIGH \
+	"$JS" \
+	'PluginPostExcerpt' \
+	"$BC §10"
+
 # ---------------------------------------------------------------- MEDIUM
 
 scan "Concatenation/compression constants (no longer read)" MED \
@@ -174,10 +184,25 @@ scan "\"Howdy\" handling (moved from my-account to user-info)" MED \
 	'Howdy' \
 	"$BC §4"
 
-scan "CSS on core admin menu/toolbar icon glyphs (now inline SVG)" MED \
+scan "CSS on admin menu/toolbar icon glyphs (core and mapped Dashicons are now inline SVG)" MED \
 	"css scss sass less" \
 	'(wp-menu-image|dashicons-before|ab-icon)[^{]*::?before' \
 	"$BC §5"
+
+scan "Plugin menu Dashicon — may now render as SVG (99 mapped); check get_admin_icon_name_for_dashicon()" MED \
+	"php" \
+	"add_(menu|object|utility)_page\\(.*['\"]dashicons-" \
+	"$BC §5"
+
+scan "Toolbar title or At a Glance markup relying on Dashicon spans" MED \
+	"php" \
+	"ab-icon|dashboard_glance_items" \
+	"$BC §5"
+
+scan "JS entity action/field registration (no-op in 7.2; register in PHP)" MED \
+	"$JS" \
+	'(un)?registerEntity(Action|Field)\b' \
+	"$BC §10"
 
 scan "Dashboard Activity widget (Recent Comments moved to its own widget)" MED \
 	"php" \
@@ -253,7 +278,7 @@ scan "innerHTML in Interactivity code — could use data-wp-html" ADOPT \
 	'\.innerHTML[[:space:]]*=' \
 	"$NA — Interactivity API: data-wp-html"
 
-scan "dashicons-* admin menu icon — could use a registered SVG icon name" ADOPT \
+scan "Unmapped dashicons-* menu icon — could use a registered SVG icon name" ADOPT \
 	"php" \
 	"add_menu_page\(.*['\"]dashicons-" \
 	"$NA — Icons"

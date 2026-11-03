@@ -1,6 +1,6 @@
 # WordPress 7.2 — Breaking and Behavior Changes
 
-Ordered by likelihood of breaking a real codebase. Every entry here is **In Beta 1** — committed to `wordpress-develop` trunk and present in the 7.2 Beta 1 build (`7.2-beta1-64606`, Gutenberg pinned at 24.2.0) — and was checked against that source, not only against announcements. Items that were announced but not committed are listed in [sources.md](sources.md#roadmap-items-not-in-beta-1).
+Sections 1–9 are ordered by how likely they are to break a real codebase. Sections 10–11 were added at Beta 4. Everything here is **in the beta** and was checked against the source, not only against announcements. Sections 1–9 were first checked against Beta 1 (`7.2-beta1-64606`, Gutenberg 24.2.0) and rechecked against Beta 4. Beta 4 is `wordpress-develop` trunk@65230, and its Gutenberg is pinned at `c035c1a`, the tip of Gutenberg's `wp/7.2` branch (24.3 plus backports). Items marked _(Beta 2–4)_ landed after Beta 1. Items that were announced but not committed are listed in [sources.md](sources.md#roadmap-items-not-in-the-beta).
 
 ---
 
@@ -111,11 +111,19 @@ add_filter( 'wp_kses_force_legacy_parser', '__return_true', 20 );
 
 With two-hyphen IDs, `data-wp-watch`, `data-wp-init`, and `data-wp-run` now **skip** the directive, and `data-wp-on--click--id` listens for an event literally named `click--id`. Both fail silently in production; a warning shows only in development mode. Server-side directive processing and `data-wp-on-async*` are unchanged.
 
+_(Beta 2–4)_ Further tightening, much of it shipped as security fixes in 7.1.4:
+
+- **`data-wp-bind--on*` is stripped from the server-rendered markup**, with a `_doing_it_wrong()`, whatever comes after the prefix (unique IDs included) ([r65228](https://core.trac.wordpress.org/changeset/65228), [#66452](https://core.trac.wordpress.org/ticket/66452)). Before this, the attribute was skipped but left in the page. Use `data-wp-on--{event}`.
+- **Bindings on `<object>` elements** may change only `aria-*`, non-directive `data-*`, `width`, `height`, and global attributes (`class`, `id`, `style`, `title`, and so on). Binding `data` or `type` is removed on the server and refused by the client runtime ([r64878](https://core.trac.wordpress.org/changeset/64878), also in 7.1.4).
+- The client rejects malformed directive names where the text after `data-wp-` starts with a hyphen, which matches core's server-side rules ([gutenberg#81023](https://github.com/WordPress/gutenberg/pull/81023)).
+- `@wordpress/interactivity` is now **8.0.0** (7.0.0 at Beta 1). The only breaking change is the Node requirement below.
+
 ```bash
 grep -rnE "data-wp-ignore" --include="*.php" --include="*.html" --include="*.js" .
 grep -rnE "data-wp-(watch|init|run)--[A-Za-z0-9]" --include="*.php" --include="*.html" --include="*.js" .
 grep -rnE "data-wp-on(-window|-document)?--[A-Za-z0-9_.-]*[A-Za-z0-9]--[A-Za-z0-9]" --include="*.php" --include="*.html" --include="*.js" .
 grep -rnE "__experimentalGroup" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" .
+grep -rnE "data-wp-bind--on" --include="*.php" --include="*.html" --include="*.js" .
 ```
 
 ---
@@ -136,26 +144,31 @@ Update the code to target `user-info`, or drop it if it only existed to remove "
 
 ## 5. Admin menu and toolbar icons are inline SVG
 
-**Severity: medium for admin styling.** [#65089](https://core.trac.wordpress.org/ticket/65089), [r64583](https://core.trac.wordpress.org/changeset/64583), [proposal](https://make.wordpress.org/core/2026/09/04/replacing-dashicons-in-the-admin-bar-and-menu/).
+**Severity: medium for admin styling; wider than at Beta 1.** [#65089](https://core.trac.wordpress.org/ticket/65089), [r64583](https://core.trac.wordpress.org/changeset/64583); _(Beta 2–4)_ [r64798](https://core.trac.wordpress.org/changeset/64798) (manifest mapping), [r64799](https://core.trac.wordpress.org/changeset/64799) (At a Glance), [r65223](https://core.trac.wordpress.org/changeset/65223) (toolbar). [Proposal](https://make.wordpress.org/core/2026/09/04/replacing-dashicons-in-the-admin-bar-and-menu/).
 
 **What changed.**
 
-- `_wp_menu_output()` maps the 12 core `dashicons-admin-*` / `dashicons-dashboard` menu icons to `core-admin/*` icons and prints them as inline SVG via `wp_get_icon()`, with classes `dashicons-before svg-icon`. The `$menu` global still holds the Dashicons values for back-compat.
-- Core toolbar nodes print `<span class="ab-icon svg-icon">` with an inline SVG (WordPress logo, search, and others).
-- Plugin menu items using `dashicons-*` are unchanged and still use the font.
-- New: `add_menu_page()` accepts a **namespaced icon name** (`my-plugin/logo`) for a registered icon. An unregistered name logs `_doing_it_wrong()` and renders an empty icon slot. See [new-apis.md](new-apis.md#icons).
-- There is **no public API** for SVG icons on toolbar nodes yet (`_wp_admin_bar_icon()` is private); keep plugin toolbar icons as they are.
-- `wp_color_scheme_menu_icon_styles()` colors the SVGs from the admin color scheme.
+- **Admin menu, any item, plugins included.** `_wp_menu_output()` asks `WP_Icons_Registry::get_admin_icon_name_for_dashicon()` whether a `dashicons-*` value has a `core-admin` replacement. If it does, the icon prints as inline SVG with classes `dashicons-before svg-icon`. At Beta 1 this was a hard-coded list of 12 core menu icons. Since Beta 2 the mapping comes from the `dashicons` property of the icon library manifest, and **at Beta 4 it covers 99 Dashicons**. That includes many that plugins use for their own menus, such as `cart`, `calendar-alt`, `chart-bar`, `email-alt`, `groups`, `location`, `shield`, `star-filled`, `store`, `tag`, `translation`, `video-alt2`, `format-*`, and `arrow-*`. Unmapped Dashicons still use the font. The `$menu` global still holds the Dashicons values. To check a specific icon, call `WP_Icons_Registry::get_instance()->get_admin_icon_name_for_dashicon( 'dashicons-cart' )` on a 7.2 site; it returns `null` when the icon stays a font glyph.
+- **Toolbar.** Nodes take a public `icon` argument (`@since 7.2.0`; namespaced name). Since Beta 4 ([r65223](https://core.trac.wordpress.org/changeset/65223)), a node with an `icon` hides the legacy Dashicon it draws for older versions, whether that is an empty `<span class="ab-icon">` in the title or CSS on `.ab-item::before`. The hiding is CSS keyed on the SVG being present, so an unregistered icon prints no SVG, logs `_doing_it_wrong()`, and leaves the legacy Dashicon visible. Core nodes (`new-content`, `comments`, `updates`, `command-palette`, `menu-toggle`) set their icon through the argument, and their **titles no longer contain the empty `<span class="ab-icon">`**. The `wp-logo` node still puts its SVG in the title, so a plugin that replaces that title replaces the logo too.
+- **Dashboard "At a Glance."** Core rows use SVG icons. Rows that plugins add through `dashboard_glance_items` get a default SVG icon unless they supply their own Dashicon via CSS or their own inline SVG ([r64799](https://core.trac.wordpress.org/changeset/64799)).
+- `add_menu_page()` accepts a **namespaced icon name** (`my-plugin/logo`) for a registered icon. An unregistered name logs `_doing_it_wrong()` and renders an empty icon slot. See [new-apis.md](new-apis.md#icons).
+- `wp_color_scheme_menu_icon_styles()` colors the SVGs from the admin color scheme. Icons bundled with core are no longer run through the SVG sanitizer on load; icons registered by plugins still are ([r64800](https://core.trac.wordpress.org/changeset/64800)).
 
 **Why code breaks.**
 
-Custom admin CSS that recolors, resizes, or replaces core icons through `::before` (`#adminmenu .menu-icon-post div.wp-menu-image:before`, `#wp-admin-bar-wp-logo > .ab-item .ab-icon:before`) no longer matches anything. White-label plugins that swap the toolbar WordPress logo via `content:` on `::before` stop working.
+- Custom admin CSS that recolors, resizes, or replaces icons through `::before` no longer matches anything. That covers core icons (`#adminmenu .menu-icon-post div.wp-menu-image:before`, `#wp-admin-bar-wp-logo > .ab-item .ab-icon:before`) and, since Beta 2, **a plugin's own menu icon when its Dashicon is mapped** (`#adminmenu .toplevel_page_my-plugin div.wp-menu-image:before`).
+- White-label plugins that swap the toolbar WordPress logo via `content:` on `::before` stop working.
+- Code that edits core toolbar node titles by matching `<span class="ab-icon">` (for example to swap the "New" or comments icon) finds nothing to match.
+- At a Glance rows whose plugin CSS targeted the old Dashicon `::before` show the default SVG instead.
 
 ```bash
 grep -rnE "(wp-menu-image|dashicons-before|ab-icon)[^{]*::?before" --include="*.css" --include="*.scss" .
+grep -rnE "add_menu_page\(.*['\"]dashicons-" --include="*.php" .   # then check each against the mapping
+grep -rnE "ab-icon" --include="*.php" .
+grep -rnE "dashboard_glance_items" --include="*.php" .
 ```
 
-Target the `svg` inside `.wp-menu-image` / `.ab-icon` and use `color` (the icons use `currentColor`). To replace the toolbar logo, remove the `wp-logo` node and add your own.
+Target the `svg` inside `.wp-menu-image` / `.ab-icon` and use `color` (the icons use `currentColor`). Keep any `::before` rule only for 7.1 and earlier. To replace the toolbar logo, remove the `wp-logo` node and add your own. For a plugin toolbar node, pass the `icon` argument; the legacy Dashicon is hidden automatically on 7.2, so the same node works on older versions without a version check.
 
 ---
 
@@ -197,6 +210,8 @@ grep -rnE "add_rewrite_rule\(\s*['\"]\^?random|['\"]random['\"]" --include="*.ph
 
 Disable with `add_filter( 'wp_enable_random_content_redirect', '__return_false' )` and flush rewrite rules; adjust rules via `random_rewrite_rules`.
 
+_(Beta 2–4)_ `wp_random_content_split_the_query()`, which was in Beta 1, was removed with a hard deprecation. Random redirects use the normal split query again ([r65042](https://core.trac.wordpress.org/changeset/65042)). Remove any code that unhooks or calls it.
+
 ---
 
 ## 9. Other silent changes
@@ -217,4 +232,59 @@ Disable with `add_filter( 'wp_enable_random_content_redirect', '__return_false' 
 | `/.well-known/change-password` redirects to the profile screen (`wp_change_password_url`).                                                                                                                                                                       | Sites already routing that path                                  | [r64348](https://core.trac.wordpress.org/changeset/64348)                                                                           |
 | Invalid `theme.json` preset items (wrong type) are dropped instead of fataling.                                                                                                                                                                                  | Themes whose broken presets were masked by caching               | [r64491](https://core.trac.wordpress.org/changeset/64491)                                                                           |
 
+### Added at Beta 2–4
+
+| Change                                                                                                                                                                                                                                                                                                                                                                   | Who notices                                                                                     | Source                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| REST revisions and autosaves return only **revisioned** meta keys (`wp_post_revision_meta_keys()`), not every `show_in_rest` key. This fixes Visual Revisions overwriting non-revisioned meta on restore.                                                                                                                                                                | Plugins that write meta onto revisions directly; add the keys with `wp_post_revision_meta_keys` | [r64731](https://core.trac.wordpress.org/changeset/64731)                                                                                                                       |
+| REST response data that isn't an array is served as returned: `_fields` leaves scalars and objects alone, links aren't added to non-`ArrayAccess` objects, and `rest_preload_api_request()` no longer casts preloaded data to an array.                                                                                                                                  | Endpoints returning objects or scalars; JS that read preloaded data as an array                 | [r64689](https://core.trac.wordpress.org/changeset/64689)                                                                                                                       |
+| Sitemaps: a sub-type that isn't registered (or is private) returns **404**, and a sitemap filtered to an empty URL list returns an empty sitemap with **200** instead of an error.                                                                                                                                                                                       | SEO plugins filtering `wp_sitemaps_*`; monitoring that expects the old codes                    | [r65043](https://core.trac.wordpress.org/changeset/65043), [r64792](https://core.trac.wordpress.org/changeset/64792)                                                            |
+| Notes gain emoji **reactions**, stored as a new `reaction` comment type. Like `note`, it's excluded from `WP_Comment_Query` unless `type` is `all` or names it. Only the reaction's author can delete it.                                                                                                                                                                | Code that counts or exports all comment rows with direct SQL                                    | [r64999](https://core.trac.wordpress.org/changeset/64999), [r65222](https://core.trac.wordpress.org/changeset/65222)                                                            |
+| `wp_enqueue_view_transitions_admin_css()` (7.0) is called from `admin-header.php` and is **no longer hooked** to `admin_enqueue_scripts`, so `remove_action()` on that hook stops working. The new `wp_print_view_transitions_render_blocking_link()` runs on `admin_head`.                                                                                              | Plugins that turned off admin view transitions                                                  | [r64691](https://core.trac.wordpress.org/changeset/64691)                                                                                                                       |
+| Bundled root certificates updated (`composer/ca-bundle` 1.6.0; eMudhra roots removed after revocation).                                                                                                                                                                                                                                                                  | Outbound HTTPS to hosts chained to eMudhra roots                                                | [r64671](https://core.trac.wordpress.org/changeset/64671), [7.1.4](https://wordpress.org/news/2026/10/wordpress-7-1-4/)                                                         |
+| `@wordpress/components` 43: **Emotion removed** from styling and `StyleProvider`'s cross-document cache. Code that uses `@emotion/react`/`@emotion/styled` inside editor iframes must supply its own `CacheProvider`. CSS-module class names now change whenever their CSS changes, so don't target hashed class names.                                                  | Editor plugins using Emotion or styling component internals                                     | [components changelog](https://github.com/WordPress/gutenberg/blob/wp/7.2/packages/components/CHANGELOG.md); see `wp-admin-ui`                                                  |
+| `@wordpress/block-editor` 19: `FontFamilyControl`, `FontAppearanceControl`, and the date-format, image-size, aspect-ratio, and text-shadow selectors moved to `@wordpress/ui`; their old `.components-*` inner classes are gone and popups are portaled. `ImageSizeControl`'s `onChangeImage` gets a popup event, so read the `slug` argument, not `event.target.value`. | Plugins with CSS overrides on those controls or reusing `ImageSizeControl`                      | [block-editor changelog](https://github.com/WordPress/gutenberg/blob/wp/7.2/packages/block-editor/CHANGELOG.md)                                                                 |
+| DataViews: action labels should omit trailing ellipses (menu items for `RenderModal` actions add one); `DataViews.BulkActionToolbar` renders nothing (bulk actions are built into table/grid).                                                                                                                                                                           | Custom DataViews screens                                                                        | [dataviews changelog](https://github.com/WordPress/gutenberg/blob/wp/7.2/packages/dataviews/CHANGELOG.md)                                                                       |
+| Every `@wordpress/*` package released for 7.2 requires **Node ≥ 22.13.0** to build.                                                                                                                                                                                                                                                                                      | Plugin build pipelines and CI images; see `wp-client-repo-setup`                                | [gutenberg#84313](https://github.com/WordPress/gutenberg/pull/84313)                                                                                                            |
+| Abilities API output changes: `core/users-query` returns the registration date as `registered.site` / `registered.gmt`; `core/content-query` counts authors only through viewable post types, so pagination totals can differ; empty-object results encode as `{}`, not `[]`.                                                                                            | MCP/agent clients that parse these abilities                                                    | [r65002](https://core.trac.wordpress.org/changeset/65002), [r65045](https://core.trac.wordpress.org/changeset/65045), [r65072](https://core.trac.wordpress.org/changeset/65072) |
+
 Not changed in 7.2, despite earlier expectations: minimum PHP stays **7.4**, minimum MySQL **5.5.5**, and core still bundles **React 18.3.1** (React 19 is on the roadmap as "unlikely to fully land").
+
+---
+
+## 10. Post editor document sidebar is DataForm; `PluginPostExcerpt` fills don't render
+
+**Severity: high for editor plugins that fill the excerpt panel.** _(Beta 2–4)_ The Gutenberg `wp/7.2` branch, pinned in core by [r64796](https://core.trac.wordpress.org/changeset/64796) and [r65225](https://core.trac.wordpress.org/changeset/65225). Gutenberg PRs: [#85081](https://github.com/WordPress/gutenberg/pull/85081) (stabilized), [#84700](https://github.com/WordPress/gutenberg/pull/84700) (fields from the server), [#84660](https://github.com/WordPress/gutenberg/pull/84660) (actions from the server). Tracking: [gutenberg#82770](https://github.com/WordPress/gutenberg/issues/82770).
+
+**What changed.**
+
+The "Editor Inspector: Use DataForm" experiment is now the default for every post type. The document sidebar renders `DataFormPostSummary`, which builds its fields from the server's entity-fields registry (`@wordpress/core-fields`), instead of the old `PostSummary`. The new summary still renders the `PluginPostStatusInfo` slot, and `PluginDocumentSettingPanel` still renders below it. **Nothing in the default sidebar renders the `PluginPostExcerpt` slot any more.** The excerpt is a DataForm field with no slot. The old components still exist for an easy revert during beta, and Gutenberg plans to remove them before RC1. The legacy `PostExcerptPanel` export still contains the slot, but core no longer mounts it.
+
+Related changes in the same leg:
+
+- Every post action comes from `/wp/v2/entity-actions` (the `@wordpress/core-actions` script modules). "Set as homepage" / "Set as posts page" moved there and can be removed with `wp_unregister_entity_actions()`.
+- `registerEntityAction`, `unregisterEntityAction`, `registerEntityField`, and `unregisterEntityField` (Gutenberg plugin only) warn and **do nothing**. Register in PHP on `wp_entity_actions_api_init` / `wp_entity_fields_api_init` with a script module ([new-apis.md](new-apis.md#entity-fields-and-actions-registries)).
+- `@wordpress/fields` dropped its post actions and most of its field exports (`titleField`, `slugField`, `statusField`, …), which moved to `@wordpress/core-fields` / `@wordpress/core-actions`. The editor stylesheet no longer includes the `@wordpress/fields` styles. A plugin that renders `MediaEdit` must load `@wordpress/fields/build-style/style.css` itself.
+
+**Why code breaks.** A `<PluginPostExcerpt>` fill (custom excerpt help text, character counters, AI excerpt buttons) silently disappears; there's no warning. Plugins that bundle `@wordpress/fields` and import the removed exports fail at build time once they update the package.
+
+```bash
+grep -rnE "PluginPostExcerpt|__experimentalPluginPostExcerpt" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" .
+grep -rnE "(un)?registerEntity(Action|Field)\b" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" .
+grep -rnE "from ['\"]@wordpress/fields['\"]" --include="*.js" --include="*.jsx" --include="*.ts" --include="*.tsx" .
+```
+
+**Fix.** Move excerpt add-ons into a `PluginDocumentSettingPanel` or `PluginPostStatusInfo` fill, or into a server-registered field (`wp_register_entity_fields()`) with a script module for its `Edit` component. Recheck at RC1; this is the item most likely to change again before release.
+
+---
+
+## 11. Security hardening released as 7.1.4 (and "Beta 3")
+
+**Severity: low for well-behaved code.** 7.2 Beta 3 had no announcement of its own; it shipped on 28 October with the [7.1.4 security release](https://wordpress.org/news/2026/10/wordpress-7-1-4/), and 7.2 carries the same fixes. Most of them only add output escaping. The ones that change behavior code may rely on:
+
+- Interactivity API bindings on `<object>` (see §3).
+- Notes: updating or deleting a note requires edit access to its post ([r64875](https://core.trac.wordpress.org/changeset/64875)).
+- Customizer changesets can no longer be discovered by unauthenticated users.
+- User logins and the email column of privacy-request list tables are now escaped on output.
+
+The same fixes were backported to 4.7+ branches, so these are not 7.2-only behavior.

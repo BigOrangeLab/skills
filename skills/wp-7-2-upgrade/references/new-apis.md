@@ -74,7 +74,9 @@ add_action( 'wp_entity_actions_api_init', function () {
 - A field or action id that is already registered is reported and skipped. Use `wp_update_entity_fields()` to change one, or `wp_unregister_entity_fields()` / `wp_unregister_entity_actions()` to replace it.
 - Directory-based collections: `wp_register_entity_field_collection( $dir )` reads `*/field.php` files that each `return array( ... )`.
 - Actions support the `list` context only; `single` was removed before release and is reported with `_doing_it_wrong()`.
-- Core's own post fields are registered this way, which is how the post-editor inspector is moving to a DataForm (roadmap; `PluginPostExcerpt` may not survive that move).
+- Core's own post fields and actions are registered this way, and since Beta 2 the post editor's document sidebar is a DataForm built from them. **`PluginPostExcerpt` fills no longer render** ([breaking-changes.md §10](breaking-changes.md#10-post-editor-document-sidebar-is-dataform-pluginpostexcerpt-fills-dont-render)).
+- This is now the **only** way to add or remove entity fields and actions. The JS `registerEntityAction` / `registerEntityField` (and their `unregister*` pairs) are no-ops. Core's own entries, including "Set as homepage" / "Set as posts page", can be removed with `wp_unregister_entity_actions()` / `wp_unregister_entity_fields()`.
+- _(Beta 2–4, [r64686](https://core.trac.wordpress.org/changeset/64686))_ `wp_get_registered_entity_field_modules()` / `wp_get_registered_entity_action_modules()` return a list of `{ module id, field/action ids }` entries, with module ids always strings. A field id of `'0'` is accepted.
 
 ---
 
@@ -107,6 +109,7 @@ store("my-plugin", {
 
 - Replaces `data-wp-watch` callbacks that set `element.innerHTML`.
 - Never create a token from `context` or from user input; context is client-controlled.
+- _(Beta 2–4, `@wordpress/interactivity` 8.0.0)_ The directive follows its value on every update and after router navigation. A token renders, a pending value keeps the current content, and anything else empties the element. A server-rendered `asDangerousHTML()` value appears in the page data as `{ "wpServerHtml": true }`, and the element keeps its server markup. The directive is ignored, with a warning, when combined with `data-wp-text`, `data-wp-each`, or `data-wp-router-region` on the same element.
 
 ---
 
@@ -145,21 +148,35 @@ JS: `getStyleForState()` / `setStyleForState()` from `@wordpress/block-editor`, 
     On 7.1 and earlier the same string would be treated as an image URL, so keep a `dashicons-*` or base64 SVG fallback when the plugin supports both (`function_exists( 'wp_is_valid_icon_name' )`).
 
 - `wp_register_icon()` accepts `keywords` for the Icon block search. Collections take `public` (default `true`); `core` and `core-admin` are reserved.
-- No public API yet for SVG icons on toolbar nodes (`_wp_admin_bar_icon()` is private).
+- **Toolbar nodes** take an `icon` argument (`@since 7.2.0`). Since Beta 4 ([r65223](https://core.trac.wordpress.org/changeset/65223)) it also hides the node's legacy Dashicon, so one call works on every version:
+
+    ```php
+    $wp_admin_bar->add_node( array(
+    	'id'    => 'my-plugin',
+    	'icon'  => 'my-plugin/logo', // 7.2+: inline SVG; legacy icon below is hidden.
+    	'title' => '<span class="ab-icon dashicons dashicons-admin-generic"></span>' . esc_html__( 'My Plugin', 'my-plugin' ),
+    ) );
+    ```
+
+    On 7.1 and earlier the `icon` key is ignored and the Dashicon shows. On 7.2, CSS (`:has(> .ab-icon.svg-icon)`) hides the empty legacy `.ab-icon` and any `.ab-item::before` glyph. If the icon isn't registered, no SVG prints, `_doing_it_wrong()` is logged, and the legacy Dashicon stays visible.
+
+- `WP_Icons_Registry::get_instance()->get_admin_icon_name_for_dashicon( 'dashicons-…' )` returns the `core-admin/*` icon that replaces a Dashicon in the admin, or `null`. Use it to tell whether a plugin's `dashicons-*` menu icon now renders as SVG ([breaking-changes.md §5](breaking-changes.md#5-admin-menu-and-toolbar-icons-are-inline-svg)).
 
 ---
 
 ## Smaller additions
 
-| API                                                                     | Use                                                                                           |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `pre_wp_count_posts`, `pre_wp_count_attachments` filters                | Short-circuit expensive counts on large sites with a precomputed value                        |
-| `wp_ai_client_embedding()`, `WP_AI_Client_Embedding_Builder`            | Embedding vectors through the bundled PHP AI Client (1.5.0); `wp_ai_client_prevent_embedding` |
-| Abilities `core/content-query`, `core/settings-get`, `core/users-query` | Read-only content, settings, and user abilities for agents and MCP                            |
-| `register_site_meta()` / `unregister_site_meta()`                       | Registered meta for multisite sites (wraps `register_meta( 'blog', ... )`)                    |
-| `wp_truncate_slug()`                                                    | Replaces `_truncate_post_slug()`                                                              |
-| `wp_is_meta_box_reordering_enabled()`                                   | Respect the new per-user "disable meta box rearranging" screen option in custom meta box UIs  |
-| `wp_change_password_url` filter                                         | Point `/.well-known/change-password` at a custom account screen                               |
-| `wp_feed_namespaces` filter, `wp_get_feed_namespaces()`                 | Add XML namespaces to feeds without echoing into the root element                             |
-| `wp_generate_animated_image_subsizes` filter (default `true`)           | Keep or drop animation in GIF/WebP sub-sizes                                                  |
-| `auto_approve_ping` filter                                              | Control same-site pingback auto-approval                                                      |
+| API                                                                     | Use                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre_wp_count_posts`, `pre_wp_count_attachments` filters                | Short-circuit expensive counts on large sites with a precomputed value                                                                                                                                                                             |
+| `wp_ai_client_embedding()`, `WP_AI_Client_Embedding_Builder`            | Embedding vectors through the bundled PHP AI Client (1.5.0); `wp_ai_client_prevent_embedding`                                                                                                                                                      |
+| Abilities `core/content-query`, `core/settings-get`, `core/users-query` | Read-only content, settings, and user abilities for agents and MCP                                                                                                                                                                                 |
+| `register_site_meta()` / `unregister_site_meta()`                       | Registered meta for multisite sites (wraps `register_meta( 'blog', ... )`)                                                                                                                                                                         |
+| `wp_truncate_slug()`                                                    | Replaces `_truncate_post_slug()`                                                                                                                                                                                                                   |
+| `wp_is_meta_box_reordering_enabled()`                                   | Respect the new per-user "disable meta box rearranging" screen option in custom meta box UIs                                                                                                                                                       |
+| `wp_change_password_url` filter                                         | Point `/.well-known/change-password` at a custom account screen                                                                                                                                                                                    |
+| `wp_feed_namespaces` filter, `wp_get_feed_namespaces()`                 | Add XML namespaces to feeds without echoing into the root element                                                                                                                                                                                  |
+| `wp_generate_animated_image_subsizes` filter (default `true`)           | Keep or drop animation in GIF/WebP sub-sizes                                                                                                                                                                                                       |
+| `auto_approve_ping` filter                                              | Control same-site pingback auto-approval                                                                                                                                                                                                           |
+| `rest_allowed_cors_methods` filter _(Beta 2–4)_                         | Narrow `Access-Control-Allow-Methods`. Seeded from a header already on the response, which `rest_post_dispatch` used to lose ([r64730](https://core.trac.wordpress.org/changeset/64730))                                                           |
+| REST route `data_processing` option _(Beta 2–4)_                        | `false`, or `array( 'fields' => false, 'embed' => false, 'links' => false )` in `register_rest_route()`, to serve response data as returned without `_fields`/`_embed`/link processing ([r64689](https://core.trac.wordpress.org/changeset/64689)) |
